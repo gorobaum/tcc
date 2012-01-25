@@ -4,9 +4,9 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/thiago/repositorios/tcc/multiplicacaodematriz/cll.cpp" "/home/thiago/repositorios/tcc/multiplicacaodematriz/builds/CMakeFiles/multi.dir/cll.cpp.o"
-  "/home/thiago/repositorios/tcc/multiplicacaodematriz/part1.cpp" "/home/thiago/repositorios/tcc/multiplicacaodematriz/builds/CMakeFiles/multi.dir/part1.cpp.o"
-  "/home/thiago/repositorios/tcc/multiplicacaodematriz/util.cpp" "/home/thiago/repositorios/tcc/multiplicacaodematriz/builds/CMakeFiles/multi.dir/util.cpp.o"
+  "/home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/cll.cpp" "/home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds/CMakeFiles/multi.dir/cll.cpp.o"
+  "/home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/part1.cpp" "/home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds/CMakeFiles/multi.dir/part1.cpp.o"
+  "/home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/util.cpp" "/home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds/CMakeFiles/multi.dir/util.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 

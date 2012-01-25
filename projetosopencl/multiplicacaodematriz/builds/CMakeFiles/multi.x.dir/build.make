@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 CMAKE_EDIT_COMMAND = /usr/bin/ccmake
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/thiago/repositorios/tcc/multiplicacaodematriz
+CMAKE_SOURCE_DIR = /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/thiago/repositorios/tcc/multiplicacaodematriz/builds
+CMAKE_BINARY_DIR = /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds
 
 # Include any dependencies generated for this target.
 include CMakeFiles/multi.x.dir/depend.make
@@ -51,17 +51,17 @@ include CMakeFiles/multi.x.dir/flags.make
 
 CMakeFiles/multi.x.dir/main.cpp.o: CMakeFiles/multi.x.dir/flags.make
 CMakeFiles/multi.x.dir/main.cpp.o: ../main.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/thiago/repositorios/tcc/multiplicacaodematriz/builds/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/multi.x.dir/main.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multi.x.dir/main.cpp.o -c /home/thiago/repositorios/tcc/multiplicacaodematriz/main.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multi.x.dir/main.cpp.o -c /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/main.cpp
 
 CMakeFiles/multi.x.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/multi.x.dir/main.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/thiago/repositorios/tcc/multiplicacaodematriz/main.cpp > CMakeFiles/multi.x.dir/main.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/main.cpp > CMakeFiles/multi.x.dir/main.cpp.i
 
 CMakeFiles/multi.x.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/multi.x.dir/main.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/thiago/repositorios/tcc/multiplicacaodematriz/main.cpp -o CMakeFiles/multi.x.dir/main.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/main.cpp -o CMakeFiles/multi.x.dir/main.cpp.s
 
 CMakeFiles/multi.x.dir/main.cpp.o.requires:
 .PHONY : CMakeFiles/multi.x.dir/main.cpp.o.requires
@@ -99,6 +99,6 @@ CMakeFiles/multi.x.dir/clean:
 .PHONY : CMakeFiles/multi.x.dir/clean
 
 CMakeFiles/multi.x.dir/depend:
-	cd /home/thiago/repositorios/tcc/multiplicacaodematriz/builds && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/thiago/repositorios/tcc/multiplicacaodematriz /home/thiago/repositorios/tcc/multiplicacaodematriz /home/thiago/repositorios/tcc/multiplicacaodematriz/builds /home/thiago/repositorios/tcc/multiplicacaodematriz/builds /home/thiago/repositorios/tcc/multiplicacaodematriz/builds/CMakeFiles/multi.x.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds /home/thiago/repositorios/tcc/projetosopencl/multiplicacaodematriz/builds/CMakeFiles/multi.x.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/multi.x.dir/depend
 

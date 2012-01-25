@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 project(multi)
 
 #need to include FindOPENCL.cmake to
-SET( CMAKE_MODULE_PATH ${multi_SOURCE_DIR}/cmake)
+SET( CMAKE_MODULE_PATH ${multi_SOURCE_DIR}/../cmake)
 
 message("CMake module path: ${CMAKE_MODULE_PATH}\n")
 

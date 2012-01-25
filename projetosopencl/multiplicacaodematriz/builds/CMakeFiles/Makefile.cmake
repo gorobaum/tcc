@@ -7,7 +7,7 @@ SET(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 SET(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/thiago/repositorios/tcc/cmake/FindOPENCL.cmake"
+  "/home/thiago/repositorios/tcc/projetosopencl/cmake/FindOPENCL.cmake"
   "../CMakeLists.txt"
   "CMakeFiles/CMakeCCompiler.cmake"
   "CMakeFiles/CMakeCXXCompiler.cmake"
