@@ -1,0 +1,1 @@
+/usr/bin/c++       CMakeFiles/multi.x.dir/main.cpp.o  -o multi.x -rdynamic libmulti.a -lOpenCL 

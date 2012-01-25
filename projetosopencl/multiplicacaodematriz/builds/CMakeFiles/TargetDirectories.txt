@@ -1,0 +1,2 @@
+/home/thiago/repositorios/tcc/multiplicacaodematriz/builds/CMakeFiles/multi.dir
+/home/thiago/repositorios/tcc/multiplicacaodematriz/builds/CMakeFiles/multi.x.dir

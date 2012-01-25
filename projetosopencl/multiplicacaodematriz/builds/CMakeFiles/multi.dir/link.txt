@@ -1,0 +1,2 @@
+/usr/bin/ar cr libmulti.a  CMakeFiles/multi.dir/cll.cpp.o CMakeFiles/multi.dir/part1.cpp.o CMakeFiles/multi.dir/util.cpp.o
+/usr/bin/ranlib libmulti.a
