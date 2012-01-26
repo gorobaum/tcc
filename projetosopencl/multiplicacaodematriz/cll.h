@@ -13,9 +13,9 @@ class CL {
         ///cl_mem cl_a;
         ///cl_mem cl_b;
         ///cl_mem cl_c;
-        cl::Buffer* cl_a;
-        cl::Buffer* cl_b;
-        cl::Buffer* cl_c;
+        cl::Buffer cl_a;
+        cl::Buffer cl_b;
+        cl::Buffer cl_c;
         int line_a, column_a, line_b, column_b;    //the size of our arrays
 
 

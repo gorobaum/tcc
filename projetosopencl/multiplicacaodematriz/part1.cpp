@@ -34,32 +34,33 @@ void CL::popCorn()
     }
 
     printf("Creating OpenCL arrays\n");
-    size_t array_size = sizeof(int) * MN;
+    size_t array_size = sizeof(int) * MN * MN;
     //our input arrays
     ///cl_a = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(float) * num, NULL, &err);
     ///cl_b = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(float) * num, NULL, &err);
-    int i = 0;
-    for ( i = 0; i < MN; i++) {
-        cl_a[i] = cl::Buffer(context, CL_MEM_READ_ONLY, array_size, NULL, &err);
-        cl_b[i] = cl::Buffer(context, CL_MEM_READ_ONLY, array_size, NULL, &err);
-    	//our output array
-    	///cl_c = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(float) * num, NULL, &err);
-        cl_c[i] = cl::Buffer(context, CL_MEM_WRITE_ONLY, array_size, NULL, &err);
-    }
+    cl_a = cl::Buffer(context, CL_MEM_READ_ONLY, array_size, NULL, &err);
+    cl_b = cl::Buffer(context, CL_MEM_READ_ONLY, array_size, NULL, &err);
+    //our output array
+    //cl_c = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(float) * num, NULL, &err);
+    cl_c = cl::Buffer(context, CL_MEM_WRITE_ONLY, array_size, NULL, &err);
     printf("Pushing data to the GPU\n");
     //push our CPU arrays to the GPU
     ///err = clEnqueueWriteBuffer(command_queue, cl_a, CL_TRUE, 0, sizeof(float) * num, a, 0, NULL, &event);
-    for ( i = 0; i < MN; i++) {
-    	err = queue.enqueueWriteBuffer(cl_a[i], CL_TRUE, 0, array_size, a[i], NULL, &event);
-    	///clReleaseEvent(event); //we need to release events in order to be completely clean (has to do with openclprof)
-    	///err = clEnqueueWriteBuffer(command_queue, cl_b, CL_TRUE, 0, sizeof(float) * num, b, 0, NULL, &event);
-    	err = queue.enqueueWriteBuffer(cl_b[i], CL_TRUE, 0, array_size, b[i], NULL, &event);
-    	///clReleaseEvent(event);
-        ///err = clEnqueueWriteBuffer(command_queue, cl_c, CL_TRUE, 0, sizeof(float) * num, c, 0, NULL, &event);
-        err = queue.enqueueWriteBuffer(cl_c[i], CL_TRUE, 0, array_size, c[i], NULL, &event);
-        ///clReleaseEvent(event);
+    err = queue.enqueueWriteBuffer(cl_a, CL_TRUE, 0, array_size, a, NULL, &event);
+    ///clReleaseEvent(event); //we need to release events in order to be completely clean (has to do with openclprof)
+    ///err = clEnqueueWriteBuffer(command_queue, cl_b, CL_TRUE, 0, sizeof(float) * num, b, 0, NULL, &event);
+    err = queue.enqueueWriteBuffer(cl_b, CL_TRUE, 0, array_size, b, NULL, &event);
+    ///clReleaseEvent(event);
+    ///err = clEnqueueWriteBuffer(command_queue, cl_c, CL_TRUE, 0, sizeof(float) * num, c, 0, NULL, &event);
+    err = queue.enqueueWriteBuffer(cl_c, CL_TRUE, 0, array_size, c, NULL, &event);
+    ///clReleaseEvent(event);
+    queue.finish();
+    int teste[MN][MN];
+    err = queue.enqueueReadBuffer(cl_a, CL_TRUE, 0, sizeof(float) * MN * MN, &teste, NULL, &event);
+    for( int i = 0; i < MN; i++ ){
+	for( int j = 0; j < MN; j++ ) printf("%d  ", teste[i][j]);
+	printf("\n");
     }
-
     //set the arguements of our kernel
     ///err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *) &cl_a);
     ///err  = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *) &cl_b);
@@ -73,9 +74,9 @@ void CL::popCorn()
  
     //for now we make the workgroup size the same as the number of elements in our arrays
     //workGroupSize[0] = num;
-    delete a;
-    delete b;
-    delete c;
+    //delete a;
+    //delete b;
+    //delete c;
 }
 
 
@@ -85,7 +86,7 @@ void CL::runKernel()
     printf("in runKernel\n");
     //execute the kernel
     ///err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, workGroupSize, NULL, 0, NULL, &event);
-    err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MN), cl::NullRange, NULL, &event); 
+    err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MN*MN), cl::NullRange, NULL, &event); 
     ///clReleaseEvent(event);
     printf("clEnqueueNDRangeKernel: %s\n", oclErrorString(err));
     ///clFinish(command_queue);
@@ -94,10 +95,8 @@ void CL::runKernel()
     //lets check our calculations by reading from the device memory and printing out the results
     int c_done[MN][MN];
     ///err = clEnqueueReadBuffer(command_queue, cl_c, CL_TRUE, 0, sizeof(float) * num, c_done, 0, NULL, &event);
-    for(int i = 0; i < MN; i++) {
-    	err = queue.enqueueReadBuffer(cl_c[i], CL_TRUE, 0, sizeof(float) * MN, &c_done[i], NULL, &event);
-    	printf("clEnqueueReadBuffer: %s\n", oclErrorString(err));
-    }
+    err = queue.enqueueReadBuffer(cl_c, CL_TRUE, 0, sizeof(float) * MN * MN, &c_done, NULL, &event);
+    printf("clEnqueueReadBuffer: %s\n", oclErrorString(err));
     //clReleaseEvent(event);
 
     for(int i=0; i < MN; i++)
