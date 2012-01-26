@@ -28,11 +28,10 @@ void CL::popCorn()
     {
 	for(int j = 0; j < MN; j++) {
 	    a[i][j] = i+j;
-            b[i][j] = i+j;
+            b[i][j] = 2;
             c[i][j] = 0;
 	}
     }
-
     printf("Creating OpenCL arrays\n");
     size_t array_size = sizeof(int) * MN * MN;
     //our input arrays
