@@ -26,11 +26,11 @@ void CL::popCorn()
     int c[MN][MN];
     for(int i=0; i < MN; i++)
     {
-	for(int j = 0; j < MN; j++) {
-	    a[i][j] = i+j;
-            b[i][j] = 2;
-            c[i][j] = 0;
-	}
+	    for(int j = 0; j < MN; j++) {
+	      a[i][j] = i+j;
+        b[i][j] = 2;
+        c[i][j] = 0;
+	    }
     }
     printf("Creating OpenCL arrays\n");
     size_t array_size = sizeof(int) * MN * MN;
@@ -57,8 +57,8 @@ void CL::popCorn()
     int teste[MN][MN];
     err = queue.enqueueReadBuffer(cl_a, CL_TRUE, 0, sizeof(float) * MN * MN, &teste, NULL, &event);
     for( int i = 0; i < MN; i++ ){
-	for( int j = 0; j < MN; j++ ) printf("%d  ", teste[i][j]);
-	printf("\n");
+	    for( int j = 0; j < MN; j++ ) printf("%d  ", teste[i][j]);
+	    printf("\n");
     }
     //set the arguements of our kernel
     ///err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *) &cl_a);
@@ -85,7 +85,7 @@ void CL::runKernel()
     printf("in runKernel\n");
     //execute the kernel
     ///err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, workGroupSize, NULL, 0, NULL, &event);
-    err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MN*MN), cl::NullRange, NULL, &event); 
+    err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(MN,MN), cl::NullRange, NULL, &event); 
     ///clReleaseEvent(event);
     printf("clEnqueueNDRangeKernel: %s\n", oclErrorString(err));
     ///clFinish(command_queue);
@@ -100,8 +100,8 @@ void CL::runKernel()
 
     for(int i=0; i < MN; i++)
     {
-	for(int j = 0; j < MN; j++) printf("%d  ", c_done[i][j]);
-	printf("\n");
+	    for(int j = 0; j < MN; j++) printf("%d  ", c_done[i][j]);
+	    printf("\n");
     }
 }
 
