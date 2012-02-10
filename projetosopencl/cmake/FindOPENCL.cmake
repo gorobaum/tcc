@@ -33,7 +33,7 @@ ELSE (WIN32)
 
     message("lib path: $ENV{LD_LIBRARY_PATH}")
     #FIND_LIBRARY(OPENCL_LIBRARIES OpenCL $ENV{LD_LIBRARY_PATH})
-    FIND_LIBRARY(OPENCL_LIBRARIES OpenCL ENV LD_LIBRARY_PATH)
+    FIND_LIBRARY(OPENCL_LIBRARIES OpenCL)
     message("==============")
     message("opencl_libraries: ${OPENCL_LIBRARIES}")
 
