@@ -8,11 +8,38 @@ HPC nasceu da necessidade de poder computacional para resolver uma série de pro
   \item Física quântica
 \end{itemize}
 Os supercomputadores foram criados para rodar as aplicações que executavam esses objetivos. Até o final
-dos anos 90 todos os supercomputadores tinham como base CPUs. Só no final da década seguinte, com o aumento
-do desempenho das GPUs, que alguns supercomputadores começaram a usar GPUs como seus processadores
+dos anos 90 todos os supercomputadores tinham como base processadores vetoriais. Só no final da década seguinte, 
+com o aumento do desempenho das GPUs, que alguns supercomputadores começaram a usar GPUs como seus processadores.
 \subsection{GPGPU}
-\subsubsection{História}
-\subsubsection{Placas NVidia}
+As GPUs nasceram da necessidade de acelerar a taxa com que as imagens eram exibidas no monitor. Por isso, sua arquitetura
+é diferente de uma CPU e temos que levar isso em conta ao escrever programas para elas. O paradigma usado no processamento
+das GPUs é conhecido como Stream processing.
+
+\subsubsection{Stream processing}
+Esse paradigma cria um ambiente que simplifica tanto o software quanto o hardware, mas limita a quantidade de problemas 
+paralelizáveis que odem ser resolvídos nesse ambiente.
+
+Stream processing se baseia em vários processadores, cada um com um pequeno cache de acesso próprio, 
+rodando um mesmo conjunto de instruções ( kernels ). Cada processador irá aplicar o mesmo kernel em um
+conjunto diferente de dados, e todos eles executarão seus kernels em paralelo. No final, todo o resultado é
+combinado, assim resolvendo o problema inicial.
+
+Vamos usar de exemplo a GPU usada para os testes desse trabalho, uma GeForce GTX 260. Ela contém
+192 processadores, separados em blocos de 8 processadores, cada um com um cache de 16Kb. Cada bloco
+tem um cache próprio, e a placa tem 896Mb de memória.
+
+É fácil ver como esse paradigma é eficiente para resolver integrais ou multiplicações de matrizes, onde não há
+dependencia de dados entre instâncias dos kernels e os dados podem ser fácilmente distribuidos pelos caches.
+Mas esse paradigma pode não ser o mais eficiente para resolver um problema clássico de programação paralela, o dos
+Filósofos Famintos, onde todos os processos dependem de mais dois processos.
+
+O problema dessa depêndencia é a compartilhação de memória entre os dependentes. Ao modificar um pedaço de memória
+compartilhada, todos os processos que utilizam essa memória devem parar sua execução e fazer a releitura do cache,
+que deve ser feita de maneira sequencial.
+
+Conhecer tanto a arquitetura como a capacidade de processamento e memória do hardware em que vamos programar é 
+importante para conseguir o máximo de desempenho possível. É importante também modificar o problema em questão 
+para adequá-lo a esse paradigma.
 \subsection{CUDA}
 \subsubsection{Modelo de Memória}
 \subsubsection{Modelo de Execução}
