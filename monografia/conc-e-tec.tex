@@ -15,6 +15,21 @@ As GPUs nasceram da necessidade de acelerar a taxa com que as imagens eram exibi
 é diferente de uma CPU e temos que levar isso em conta ao escrever programas para elas. O paradigma usado no processamento
 das GPUs é conhecido como Stream processing.
 
+As GPUs modernas são compostas de centenas ou até milhares de processadores mais lentos que um processador de uma CPU,
+mas quando usados em conjunto em operações paralelas chegam a ser 10 vezes mais rápidas que uma CPU. Os processadores
+estão organizados em blocos dentro da GPU, cada um com um cache próprio.
+Cada bloco também contém uma região para memória compartilhada, que é acessível
+por todos os processadores do mesmo bloco. Isso impõe algumas complicações na escrita de programas. Temos um desempenho
+maior em programas que distribuem a memória de modo que threads rodando no mesmo bloco de processadores utilizem posições
+que estão no mesmo bloco da memória, evitando que o gerenciador de memória tenha que fazer leituras na memória principal.
+
+Um dos problemas com GPGPU é a memória da GPU. Ela é bem mais limitada que a acessivel pela CPU. GPUs tem, em média, 1GB
+de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia da memória principal do computador para a memória principal
+da GPU. A transmissão é feita por um barramento PCI Express na maioria dos casos, com velocidades de até 16GB/s, dado que o
+barramento esteja sendo usado somente para isso, o que é pouco provável. Essa transmissão é a parte mais lenta de todo o
+processo de execução na GPU. Em alguns casos é mais viável fazer algumas operações de baixar eficiência numa GPU do que
+retornar os dados para a CPU e passá-los de volta para a GPU.
+
 \subsubsection{Stream processing}
 Esse paradigma cria um ambiente que simplifica tanto o software quanto o hardware, mas limita a quantidade de problemas 
 paralelizáveis que odem ser resolvídos nesse ambiente.
@@ -29,7 +44,7 @@ Vamos usar de exemplo a GPU usada para os testes desse trabalho, uma GeForce GTX
 tem um cache próprio, e a placa tem 896Mb de memória.
 
 É fácil ver como esse paradigma é eficiente para resolver integrais ou multiplicações de matrizes, onde não há
-dependencia de dados entre instâncias dos kernels e os dados podem ser fácilmente distribuidos pelos caches.
+dependencia de dados entre instâncias dos kernels e os dados podem ser fácilmente segmentados para caches diferentes.
 Mas esse paradigma pode não ser o mais eficiente para resolver um problema clássico de programação paralela, o dos
 Filósofos Famintos, onde todos os processos dependem de mais dois processos.
 
@@ -40,8 +55,28 @@ que deve ser feita de maneira sequencial.
 Conhecer tanto a arquitetura como a capacidade de processamento e memória do hardware em que vamos programar é 
 importante para conseguir o máximo de desempenho possível. É importante também modificar o problema em questão 
 para adequá-lo a esse paradigma.
+
+Para obter o máximo desempenho do programa, é preciso analisar como a linguagem escolhida abstrai o hardware da GPU.
+
+
 \subsection{CUDA}
+Compute Unified Device Architecture (CUDA) é uma arquitetura de programação para GPUs criada pela NVidia.
+A versão 1.0 foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
+e só existe suporte para GPUs NVidia.
+
+O CUDA implementa um conjunto virtual de instruções e memória, tornando os programas retroativos. O compilador
+primeiro compila o código em C para um intermediário, chamado de PTX, que depois será convertido em linguagem
+de máquina. Na conversão do PTX para linguagem de máquina o compilador verifica quais instruções o hardware
+suporte e converte o código para usar as instruções corretas. Novamente, para obter o maior desempenho possível,
+é importante saber para qual versão o código final será compilado, pois na passagem do código de uma versão
+maior para uma menor não existe a garantia que o algoritmo seguira as mesmas instruções, o compilador pode
+mudar um conjunto de instruções para outro menos eficiênte.
+
+A inicialização dos recursos que o CUDA necessita para a comunicação com a GPU é feita no background da
+aplicação no momento da primeira chamada de alguma das diretivas do CUDA. Essa primeira diretiva terá um
+tempo maior de execução que chamadas subsequentes a mesma diretiva.
 \subsubsection{Modelo de Memória}
+
 \subsubsection{Modelo de Execução}
 \subsubsection{Modelo de Plataforma}
 \subsubsection{Modelo de Programação}
