@@ -16,21 +16,30 @@ arquitetura é o modelo de execução em pipeline que as GPUs implementam. Todo 
 pré-definidas dentro da GPU. Com o passar dos anos, essas operações se tornaram programaveis, primeiramente atraves
 dos shaders, e depois atraves de linguagens como as descritas logo abaixo. Esse paralelismo inerente das GPUs criou
 um ambiente favoravel para aplicações paralelizaveis de alta performance. Vamos estudar um pouco mais a fundo a 
-arquitetura COLOCAR ARQUITTURA DA GTX260 AQUI, pois quanto mais sabemos do hardware que executará nosso programa
-mais podemos otimizá-lo.
+arquitetura \textit{Fermi}, a utilizada na placa que usaremos para os testes. Quanto mais sabemos do hardware que 
+executará nosso programa mais podemos otimizá-lo.
  
-As GPUs com esssa arquitetura são compostas de multiprocessadores, cada um com 32 processadores. Cada multiprocessador
-contém um único registrador de instruções para todos seus processadores, fazendo com que todos eles executem a mesma 
-instrução, mas em dados diferentes. Isso impõe algumas complicações na escrita de programas. Temos um desempenho
+As GPUs com esssa arquitetura são compostas de multiprocessadores, cada um com 32 processadores. Multiprocessadores
+são construidos para executar centenas de threads concorrentemente. Os multiprocessadores dividem todas as suas threads
+em pacotes de 32 em 32, nomeados de \textit{warps}. Todas as threads de um \textit{warp} começam executando a mesma instrução,
+mas cada uma tem seu contador de instrução e assim cada uma pode seguir um caminho diferente. Os processadores não tem
+previsão de fluxo como as CPUs. Cada \textit{warp} é ordenado pelo \textit{warp scheduler} dentro de um mesmo multiprocessador.
+É crucial saber que se um grupo de threads se separa do fluxo de execução padrão, por exemplo se metade entra num if e o resto
+no else desse if, o multiprocessador irá dividir o tempo entre os fluxos. Isso quer dizer que em um ciclo de execução,
+somente as threads que entraram no if serão executadas, e no próximo ciclo somente as do else. 
+
+
+Isso impõe algumas complicações na escrita de programas. Temos um desempenho
 maior em programas que distribuem a memória de modo que threads rodando no mesmo multiprocessador utilizem posições
 que estão no mesmo bloco da memória, evitando que o gerenciador de memória tenha que fazer leituras na memória principal.
 
 Um dos problemas com GPGPU é a memória da GPU. Ela é bem mais limitada que a acessivel pela CPU. GPUs tem, em média, 1GB
 de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia da memória principal do computador para a memória principal
-da GPU. A transmissão é feita por um barramento PCI Express na maioria dos casos, com velocidades de até 16GB/s, dado que o
+da GPU. A transmissão é feita por um barramento PCI Express na maioria dos casos, com velocidades de até 16GB/s dado que o
 barramento esteja sendo usado somente para isso, o que é pouco provável. Essa transmissão é a parte mais lenta de todo o
 processo de execução na GPU. Em alguns casos é mais viável fazer algumas operações de baixar eficiência numa GPU do que
-retornar os dados para a CPU e passá-los de volta para a GPU.
+retornar os dados computados numa GPU para a CPU e passá-los de volta para a GPU para mais operações e retornar esses
+dados para a CPU.
 
 \subsubsection{Stream processing}
 Esse paradigma cria um ambiente que simplifica tanto o software quanto o hardware, mas limita a quantidade de problemas 
