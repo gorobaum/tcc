@@ -7,20 +7,22 @@ HPC nasceu da necessidade de poder computacional para resolver uma série de pro
   \item Simulações físicas
   \item Física quântica
 \end{itemize}
-Os supercomputadores foram criados para rodar as aplicações que executavam esses objetivos. Até o final
-dos anos 90 todos os supercomputadores tinham como base processadores vetoriais. Só no final da década seguinte, 
-com o aumento do desempenho das GPUs, que alguns supercomputadores começaram a usar GPUs como seus processadores.
+Até o final dos anos 90 todos os supercomputadores tinham como base processadores vetoriais. Só no final da década seguinte, 
+com o aumento do desempenho das GPUs, que alguns supercomputadores começaram a usar GPUs como suas fontes e processamento.
 \subsection{GPGPU}
-As GPUs nasceram da necessidade de acelerar a taxa com que as imagens eram exibidas no monitor. Por isso, sua arquitetura
-é diferente de uma CPU e temos que levar isso em conta ao escrever programas para elas. O paradigma usado no processamento
-das GPUs é conhecido como Stream processing.
-
 As GPUs modernas são compostas de centenas ou até milhares de processadores mais lentos que um processador de uma CPU,
-mas quando usados em conjunto em operações paralelas chegam a ser 10 vezes mais rápidas que uma CPU. Os processadores
-estão organizados em blocos dentro da GPU, cada um com um cache próprio.
-Cada bloco também contém uma região para memória compartilhada, que é acessível
-por todos os processadores do mesmo bloco. Isso impõe algumas complicações na escrita de programas. Temos um desempenho
-maior em programas que distribuem a memória de modo que threads rodando no mesmo bloco de processadores utilizem posições
+mas quando usados em conjunto em operações paralelas chegam a ser 10 vezes mais rápidas que uma CPU. A escolha para essa
+arquitetura é o modelo de execução em pipeline que as GPUs implementam. Todo dado passava por um sequencia de operações
+pré-definidas dentro da GPU. Com o passar dos anos, essas operações se tornaram programaveis, primeiramente atraves
+dos shaders, e depois atraves de linguagens como as descritas logo abaixo. Esse paralelismo inerente das GPUs criou
+um ambiente favoravel para aplicações paralelizaveis de alta performance. Vamos estudar um pouco mais a fundo a 
+arquitetura COLOCAR ARQUITTURA DA GTX260 AQUI, pois quanto mais sabemos do hardware que executará nosso programa
+mais podemos otimizá-lo.
+ 
+As GPUs com esssa arquitetura são compostas de multiprocessadores, cada um com 32 processadores. Cada multiprocessador
+contém um único registrador de instruções para todos seus processadores, fazendo com que todos eles executem a mesma 
+instrução, mas em dados diferentes. Isso impõe algumas complicações na escrita de programas. Temos um desempenho
+maior em programas que distribuem a memória de modo que threads rodando no mesmo multiprocessador utilizem posições
 que estão no mesmo bloco da memória, evitando que o gerenciador de memória tenha que fazer leituras na memória principal.
 
 Um dos problemas com GPGPU é a memória da GPU. Ela é bem mais limitada que a acessivel pela CPU. GPUs tem, em média, 1GB
@@ -46,11 +48,9 @@ tem um cache próprio, e a placa tem 896Mb de memória.
 É fácil ver como esse paradigma é eficiente para resolver integrais ou multiplicações de matrizes, onde não há
 dependencia de dados entre instâncias dos kernels e os dados podem ser fácilmente segmentados para caches diferentes.
 Mas esse paradigma pode não ser o mais eficiente para resolver um problema clássico de programação paralela, o dos
-Filósofos Famintos, onde todos os processos dependem de mais dois processos.
-
-O problema dessa depêndencia é a compartilhação de memória entre os dependentes. Ao modificar um pedaço de memória
-compartilhada, todos os processos que utilizam essa memória devem parar sua execução e fazer a releitura do cache,
-que deve ser feita de maneira sequencial.
+Filósofos Famintos, onde todos os processos dependem de mais dois processos. O problema dessa depêndencia é a 
+compartilhação de memória entre os dependentes. Ao modificar um pedaço de memória compartilhada, todos os processos 
+que utilizam essa memória devem parar sua execução e fazer a releitura do cache, que deve ser feita de maneira sequencial.
 
 Conhecer tanto a arquitetura como a capacidade de processamento e memória do hardware em que vamos programar é 
 importante para conseguir o máximo de desempenho possível. É importante também modificar o problema em questão 
@@ -58,11 +58,10 @@ para adequá-lo a esse paradigma.
 
 Para obter o máximo desempenho do programa, é preciso analisar como a linguagem escolhida abstrai o hardware da GPU.
 
-
 \subsection{CUDA}
 Compute Unified Device Architecture (CUDA) é uma arquitetura de programação para GPUs criada pela NVidia.
 A versão 1.0 foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
-e só existe suporte para GPUs NVidia.
+e ele só da suporte para GPUs NVidia.
 
 O CUDA implementa um conjunto virtual de instruções e memória, tornando os programas retroativos. O compilador
 primeiro compila o código em C para um intermediário, chamado de PTX, que depois será convertido em linguagem
