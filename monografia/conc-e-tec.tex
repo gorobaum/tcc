@@ -9,19 +9,17 @@ HPC nasceu da necessidade de poder computacional para resolver uma série de pro
 \end{itemize}
 Até o final dos anos 90 todos os supercomputadores tinham como base processadores vetoriais. Só no final da década seguinte, 
 com o aumento do desempenho das GPUs, que alguns supercomputadores começaram a usar GPUs como suas fontes e processamento.
-\subsection{GPGPU}
-As GPUs modernas são compostas de centenas ou até milhares de processadores mais lentos que um processador de uma CPU,
-mas quando usados em conjunto em operações paralelas chegam a ser 10 vezes mais rápidas que uma CPU. A escolha para essa
-arquitetura é o modelo de execução em pipeline que as GPUs implementam. Todo dado passava por um sequencia de operações
-pré-definidas dentro da GPU. Com o passar dos anos, essas operações se tornaram programaveis, primeiramente atraves
-dos shaders, e depois atraves de linguagens como as descritas logo abaixo. Esse paralelismo inerente das GPUs criou
-um ambiente favoravel para aplicações paralelizaveis de alta performance. Vamos estudar um pouco mais a fundo a 
-arquitetura \textit{Fermi}, a utilizada na placa que usaremos para os testes. Quanto mais sabemos do hardware que 
-executará nosso programa mais podemos otimizá-lo.
- 
-As GPUs com esssa arquitetura são compostas de multiprocessadores, cada um com 32 processadores. Multiprocessadores
+\subsection{GPU}
+A primeira GPU foi a GeForce 256, lançada em 1999. O hardware seguia um pipeline com 2 processos, um que aplicava transformações
+em vértices e outro em pixels. Em 2001, a GeForce 3 trouxe o primeiro processador de vértices programável. Em 2005 a primeira
+GPU com um processador unificado, usado tanto para pixels como para vértices, foi lançada para o console XBox 360. Para unificar
+os 2 processos do pipeline num único processador foi necessário generalizar esse processador, abrindo as portas para programas
+mais genericos rodarem na GPU.
+
+A GPU que foi usada para os testes, uma GeForce GTX260, usa a arquitetura Tesla da NVIDIA, que segue a seguinte estrutura:
+Ela é composta de multiprocessadores, cada um com 32 processadores. Multiprocessadores
 são construidos para executar centenas de threads concorrentemente. Os multiprocessadores dividem todas as suas threads
-em pacotes de 32 em 32, nomeados de \textit{warps}. Todas as threads de um \textit{warp} começam executando a mesma instrução,
+em pacotes de 32 em 32, nomeados de \textit{warp}. Todas as threads de um \textit{warp} começam executando a mesma instrução,
 mas cada uma tem seu contador de instrução e assim cada uma pode seguir um caminho diferente. Os processadores não tem
 previsão de fluxo como as CPUs. Cada \textit{warp} é ordenado pelo \textit{warp scheduler} dentro de um mesmo multiprocessador.
 É crucial saber que se um grupo de threads se separa do fluxo de execução padrão, por exemplo se metade entra num if e o resto
