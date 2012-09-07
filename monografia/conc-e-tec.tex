@@ -14,57 +14,37 @@ A primeira GPU foi a GeForce 256, lançada em 1999. O hardware seguia um pipelin
 em vértices e outro em pixels. Em 2001, a GeForce 3 trouxe o primeiro processador de vértices programável. Em 2005 a primeira
 GPU com um processador unificado, usado tanto para pixels como para vértices, foi lançada para o console XBox 360. Para unificar
 os 2 processos do pipeline num único processador foi necessário generalizar esse processador, abrindo as portas para programas
-mais genericos rodarem na GPU.
+paralelos genericos executarem na GPU.
 
-A GPU que foi usada para os testes, uma GeForce GTX260, usa a arquitetura Tesla da NVIDIA, que segue a seguinte estrutura:
-Ela é composta de multiprocessadores, cada um com 32 processadores. Multiprocessadores
-são construidos para executar centenas de threads concorrentemente. Os multiprocessadores dividem todas as suas threads
-em pacotes de 32 em 32, nomeados de \textit{warp}. Todas as threads de um \textit{warp} começam executando a mesma instrução,
-mas cada uma tem seu contador de instrução e assim cada uma pode seguir um caminho diferente. Os processadores não tem
-previsão de fluxo como as CPUs. Cada \textit{warp} é ordenado pelo \textit{warp scheduler} dentro de um mesmo multiprocessador.
-É crucial saber que se um grupo de threads se separa do fluxo de execução padrão, por exemplo se metade entra num if e o resto
-no else desse if, o multiprocessador irá dividir o tempo entre os fluxos. Isso quer dizer que em um ciclo de execução,
-somente as threads que entraram no if serão executadas, e no próximo ciclo somente as do else. 
+O processamento da placa usada para os testes desse trabalho, a GeForce GTX260 que usa a arquitetura Tesla, segue dois fluxos 
+diferentes, um para execução gráfica e outro para paralela. Vamos estudar o fluxo paralelo abaixo.
 
+A placa contém um escalonador implementado em hardware para threads. Ele é responsável por escalonar as threads que serão
+executadas nos Thread Processing Clusters (TPCs)A GeForce GTX260 tem 8 TPCs. Cada TPC tem 3 streaming multiprocessors (SM), 
+e em cada SM existem 8 streaming-processor (SPs) e um bloco de memória compartilhada. Para os TPCs, a execução segue um padrão
+de multiplas intruções, multiplos dados (MIMD), e dentro dos TPCs, nos SMs, a execução segue o padrão única instrução, multiplas
+threads (SIMT). Nesse padrão, a mesma instrução é mandada para threads diferentes, e cada thread aplica a instrução em um
+conjunto de dados diferentes. O próprio hardware cuida de posiveis separações condicionais no código.
 
-Isso impõe algumas complicações na escrita de programas. Temos um desempenho
-maior em programas que distribuem a memória de modo que threads rodando no mesmo multiprocessador utilizem posições
-que estão no mesmo bloco da memória, evitando que o gerenciador de memória tenha que fazer leituras na memória principal.
+O código que será executado nos SPs é chamado de Kernel. Então, ao executar um kernel na GPU, o hardware criará threads,
+cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada para um SP diferente. Como
+as threads são distribuidas pelos SMs e TPCs varia com a linguagem usada pelo kernel.
 
-Um dos problemas com GPGPU é a memória da GPU. Ela é bem mais limitada que a acessivel pela CPU. GPUs tem, em média, 1GB
-de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia da memória principal do computador para a memória principal
-da GPU. A transmissão é feita por um barramento PCI Express na maioria dos casos, com velocidades de até 16GB/s dado que o
-barramento esteja sendo usado somente para isso, o que é pouco provável. Essa transmissão é a parte mais lenta de todo o
+Outra parte importante do hardware é a memória. A memória na GPU é limitada em relação à da CPU. GPUs tem, em média, 1GB
+de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia de dados da memória principal do computador para a memória 
+principal da GPU. A transmissão é feita por um barramento PCI Express, com velocidades de até 16GB/s, dado que o
+barramento esteja sendo usado somente para isso. Essa transmissão é a parte mais lenta de todo o
 processo de execução na GPU. Em alguns casos é mais viável fazer algumas operações de baixar eficiência numa GPU do que
 retornar os dados computados numa GPU para a CPU e passá-los de volta para a GPU para mais operações e retornar esses
-dados para a CPU.
+dados para a CPU. Com os dados já na memória principal da GPU, eles são copiados para os caches de cada SM por demanda.
 
-\subsubsection{Stream processing}
-Esse paradigma cria um ambiente que simplifica tanto o software quanto o hardware, mas limita a quantidade de problemas 
-paralelizáveis que odem ser resolvídos nesse ambiente.
-
-Stream processing se baseia em vários processadores, cada um com um pequeno cache de acesso próprio, 
-rodando um mesmo conjunto de instruções ( kernels ). Cada processador irá aplicar o mesmo kernel em um
-conjunto diferente de dados, e todos eles executarão seus kernels em paralelo. No final, todo o resultado é
-combinado, assim resolvendo o problema inicial.
-
-Vamos usar de exemplo a GPU usada para os testes desse trabalho, uma GeForce GTX 260. Ela contém
-192 processadores, separados em blocos de 8 processadores, cada um com um cache de 16Kb. Cada bloco
-tem um cache próprio, e a placa tem 896Mb de memória.
-
-É fácil ver como esse paradigma é eficiente para resolver integrais ou multiplicações de matrizes, onde não há
-dependencia de dados entre instâncias dos kernels e os dados podem ser fácilmente segmentados para caches diferentes.
-Mas esse paradigma pode não ser o mais eficiente para resolver um problema clássico de programação paralela, o dos
-Filósofos Famintos, onde todos os processos dependem de mais dois processos. O problema dessa depêndencia é a 
-compartilhação de memória entre os dependentes. Ao modificar um pedaço de memória compartilhada, todos os processos 
-que utilizam essa memória devem parar sua execução e fazer a releitura do cache, que deve ser feita de maneira sequencial.
-
-Conhecer tanto a arquitetura como a capacidade de processamento e memória do hardware em que vamos programar é 
-importante para conseguir o máximo de desempenho possível. É importante também modificar o problema em questão 
-para adequá-lo a esse paradigma.
-
-Para obter o máximo desempenho do programa, é preciso analisar como a linguagem escolhida abstrai o hardware da GPU.
-
+É importante conhecer a memória física da placa para qual se está programando por que acesso a memória é um dos maiores
+modificadores no desempenho de um programa paralelo. O acesso a memória é concorrente, mas ao utilizar caches e leitura/escritas em
+blocos podemos minimizar a taxa com que leituras/escritas conflitantes são feitas. Mas ainda sim é necessário atenção ao escrever um
+kernel. Dada a estrutura do hardware da GPU, é melhor deixar threads que façam operações sobre posições de memória próximas no mesmo
+SM, assim elas podem utilizar a memória compartilhada do mesmo. que além de ser mais rápido do que buscar os dados na memória principal,
+não cria um padrão de buscas frequentes na memoria principal, que acabaria criando uma fila de acesso das threads e diminuiria o desempenho
+do programa.
 \subsection{CUDA}
 Compute Unified Device Architecture (CUDA) é uma arquitetura de programação para GPUs criada pela NVIDIA.
 A versão 1.0 foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
