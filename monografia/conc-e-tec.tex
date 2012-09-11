@@ -16,15 +16,17 @@ GPU com um processador unificado, usado tanto para pixels como para vértices, f
 os 2 processos do pipeline num único processador foi necessário generalizar esse processador, abrindo as portas para programas
 paralelos genericos executarem na GPU.
 
-O processamento da placa usada para os testes desse trabalho, a GeForce GTX260 que usa a arquitetura Tesla, segue dois fluxos 
-diferentes, um para execução gráfica e outro para paralela. Vamos estudar o fluxo paralelo abaixo.
+O processamento da placa usada para os testes desse trabalho, a GeForce GTX460 que usa a arquitetura Fermi. sEssa arquitetura
+separa o fluxo de execução baseando-se no tipo de operações que serão executadas nela. Existe um fluxo para
+operações gráficas e outro para operações genericas. Vamos estudar o fluxo generico abaixo.
 
 A placa contém um escalonador implementado em hardware para threads. Ele é responsável por escalonar as threads que serão
-executadas nos Thread Processing Clusters (TPCs)A GeForce GTX260 tem 8 TPCs. Cada TPC tem 3 streaming multiprocessors (SM), 
-e em cada SM existem 8 streaming-processor (SPs) e um bloco de memória compartilhada. Para os TPCs, a execução segue um padrão
-de multiplas intruções, multiplos dados (MIMD), e dentro dos TPCs, nos SMs, a execução segue o padrão única instrução, multiplas
-threads (SIMT). Nesse padrão, a mesma instrução é mandada para threads diferentes, e cada thread aplica a instrução em um
-conjunto de dados diferentes. O próprio hardware cuida de posiveis separações condicionais no código.
+executadas nos Thread Processing Clusters (TPCs). Cada TPC tem 3 streaming multiprocessors (SM), 
+e em cada SM existem 8 streaming-processor (SPs) e um bloco de memória compartilhada. A GeForce GTX460 tem 8 TPCs.
+Para os TPCs, a execução segue um padrão de multiplas intruções, multiplos dados (MIMD), e dentro dos TPCs, nos SMs, 
+a execução segue o padrão única instrução, multiplas threads (SIMT). Nesse padrão, a mesma instrução é mandada para 
+threads diferentes, e cada thread aplica a instrução em um conjunto de dados diferentes. O próprio hardware cuida de 
+posiveis separações condicionais no código.
 
 O código que será executado nos SPs é chamado de Kernel. Então, ao executar um kernel na GPU, o hardware criará threads,
 cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada para um SP diferente. Como
@@ -56,16 +58,33 @@ de máquina. Na conversão do PTX para linguagem de máquina o compilador verifi
 suporte e converte o código para usar as instruções corretas. Novamente, para obter o maior desempenho possível,
 é importante saber para qual versão o código final será compilado, pois na passagem do código de uma versão
 maior para uma menor não existe a garantia que o algoritmo seguira as mesmas instruções, o compilador pode
-mudar um conjunto de instruções para outro menos eficiênte.
+mudar um conjunto de instruções para outro menos eficiênte, ou em alguns casos, algumas instruções não existem em
+versões mais antigas do hardware.
 
 A inicialização dos recursos que o CUDA necessita para a comunicação com a GPU é feita no background da
 aplicação no momento da primeira chamada de alguma das diretivas do CUDA. Essa primeira diretiva terá um
 tempo maior de execução que chamadas subsequentes a mesma diretiva.
 \subsubsection{Modelo de Memória}
+No CUDA, toda thread tem uma memoria própria, todo bloco de threads tem uma memoria compartilhada, e todas as grids tem
+acesso a memoria global. O acesso a memoria se da por transações. A memoria global pode ser acessada em blocos de 32, 64 ou 128 bytes.
+Imagine qque uma thread precisa ler o byte na posição 130. Se o tamanho do bloco for 64, essa thread ira ler da posição 128 até a 191.
+
+FALAR SOBRE ALOCAÇÃO DE MEMORIA
+
+FALAR SOBRE POSICIONAMENTO DE MEMORIA
 
 \subsubsection{Modelo de Execução}
+FALAR DE COMPUTE CAPABILITY
+
+FALAR SOBRE THREADS, BLOCOS, WARPS E GRIDS
 \subsubsection{Modelo de Plataforma}
+SOBRE INICIALIZAÇÃO DO CUDA
+
+ALOCAÇÃO DE MEMORIA
+
+INICIALIZAÇÃO DAS THREADS, KERNEL
 \subsubsection{Modelo de Programação}
+
 \subsection{OpenCL}
 \subsubsection{Modelo de Memória}
 \subsubsection{Modelo de Execução}
