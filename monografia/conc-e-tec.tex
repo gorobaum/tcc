@@ -21,16 +21,12 @@ separa o fluxo de execução baseando-se no tipo de operações que serão execu
 operações gráficas e outro para operações genericas. Vamos estudar o fluxo generico abaixo.
 
 A placa contém um escalonador implementado em hardware para threads. Ele é responsável por escalonar as threads que serão
-executadas nos Thread Processing Clusters (TPCs). Cada TPC tem 3 streaming multiprocessors (SM), 
-e em cada SM existem 8 streaming-processor (SPs) e um bloco de memória compartilhada. A GeForce GTX460 tem 8 TPCs.
-Para os TPCs, a execução segue um padrão de multiplas intruções, multiplos dados (MIMD), e dentro dos TPCs, nos SMs, 
-a execução segue o padrão única instrução, multiplas threads (SIMT). Nesse padrão, a mesma instrução é mandada para 
-threads diferentes, e cada thread aplica a instrução em um conjunto de dados diferentes. O próprio hardware cuida de 
-posiveis separações condicionais no código.
+executadas nos streaming multiprocessors (SM). Cada SM tem 48 processadores. A Geforce GTX 460 tem 7 SMs, totalizando 336
+processadores. 
 
-O código que será executado nos SPs é chamado de Kernel. Então, ao executar um kernel na GPU, o hardware criará threads,
-cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada para um SP diferente. Como
-as threads são distribuidas pelos SMs e TPCs varia com a linguagem usada pelo kernel.
+O código que será executado em cada processador é chamado de Kernel. Então, ao executar um kernel na GPU, o hardware criará threads,
+cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada para um processador diferente. Como
+as threads são distribuidas pelos SMs varia com a linguagem usada pelo kernel.
 
 Outra parte importante do hardware é a memória. A memória na GPU é limitada em relação à da CPU. GPUs tem, em média, 1GB
 de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia de dados da memória principal do computador para a memória 
@@ -38,15 +34,20 @@ principal da GPU. A transmissão é feita por um barramento PCI Express, com vel
 barramento esteja sendo usado somente para isso. Essa transmissão é a parte mais lenta de todo o
 processo de execução na GPU. Em alguns casos é mais viável fazer algumas operações de baixar eficiência numa GPU do que
 retornar os dados computados numa GPU para a CPU e passá-los de volta para a GPU para mais operações e retornar esses
-dados para a CPU. Com os dados já na memória principal da GPU, eles são copiados para os caches de cada SM por demanda.
+dados para a CPU. 
+
+Cada SM tem um bloco de memória de 64KB. Esse bloco pode ser configurado para 16KB de memória compartilhada e 48KB
+de cache L1 ou vice versa. A memória principal da placa é de 1024MB com conexões de 256 bits. A placa também tem um
+cache L2 de 512KB.
 
 É importante conhecer a memória física da placa para qual se está programando por que acesso a memória é um dos maiores
 modificadores no desempenho de um programa paralelo. O acesso a memória é concorrente, mas ao utilizar caches e leitura/escritas em
 blocos podemos minimizar a taxa com que leituras/escritas conflitantes são feitas. Mas ainda sim é necessário atenção ao escrever um
 kernel. Dada a estrutura do hardware da GPU, é melhor deixar threads que façam operações sobre posições de memória próximas no mesmo
-SM, assim elas podem utilizar a memória compartilhada do mesmo. que além de ser mais rápido do que buscar os dados na memória principal,
+SM, assim elas podem utilizar a memória compartilhada do mesmo, que além de ser mais rápido do que buscar os dados na memória principal,
 não cria um padrão de buscas frequentes na memoria principal, que acabaria criando uma fila de acesso das threads e diminuiria o desempenho
 do programa.
+
 \subsection{CUDA}
 Compute Unified Device Architecture (CUDA) é uma arquitetura de programação para GPUs criada pela NVIDIA.
 A versão 1.0 foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
@@ -64,8 +65,12 @@ versões mais antigas do hardware.
 A inicialização dos recursos que o CUDA necessita para a comunicação com a GPU é feita no background da
 aplicação no momento da primeira chamada de alguma das diretivas do CUDA. Essa primeira diretiva terá um
 tempo maior de execução que chamadas subsequentes a mesma diretiva.
-\subsubsection{Modelo de Memória}
-No CUDA, a memoria é separada em 4 locais:
+
+\subsubsection{Modelo de Programação}
+
+\subsubsection{Hierarquia de Memória}
+No CUDA, a memoria é separada lógicamente em 4 locais:
+
 \begin{itemize}
   \item Registradores - Toda variável de uma thread fica em registradores.
   \item Memória Local - Memória acessivel por cada thread separadamente, mas de uso pouco provável. Ela só é usada se
@@ -77,7 +82,18 @@ No CUDA, a memoria é separada em 4 locais:
           memória global.
   \item Memória Global - A memória global é acessivel por qualquer bloco em execução em um device. A memoria global não é
           resetada após a execução de um kernel, então chamadas subsequentes de um mesmo kernel simplesmente leêm os resultados
-          da memória global.
+          da memória global. Existe um pedaço da memória global reservada para valores constantes do programa.
+\end{itemize}
+
+Por padrão, o compilador do CUDA cuida do gerenciamento da memória, ou seja, ele é o responsável por distribuir os dados 
+entre os locais diferentes de memória. O programador pode dar dicas para o compilador usando qualificadores indicando o local
+que ele quer que aquele elemento fique na memória. Os possiveis qualificadores são:
+\begin{itemize}
+  \item \verb#__device__# Fica na memória global.
+  \item \verb#__constant__#   Fica na area constante da memória global.
+  \item \verb#__shared__# Fica na memória compartilhada das threads.
+  \item \verb#__restrict__# Indica para o compilador que todos os ponteiros com esse qualificador apontam para locais diferentes
+                            da memória. Isso é importante pois o compilador pode fazer otimizações com o código sabendo dessa informação.   
 \end{itemize}
 
 GPUs com Compute Cabapility 2.0 acima podem alocar memória dentro do device em tempo de execução. 
@@ -92,7 +108,7 @@ SOBRE INICIALIZAÇÃO DO CUDA
 ALOCAÇÃO DE MEMORIA
 
 INICIALIZAÇÃO DAS THREADS, KERNEL
-\subsubsection{Modelo de Programação}
+
 
 \subsection{OpenCL}
 \subsubsection{Modelo de Memória}
