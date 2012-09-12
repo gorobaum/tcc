@@ -16,7 +16,7 @@ GPU com um processador unificado, usado tanto para pixels como para vértices, f
 os 2 processos do pipeline num único processador foi necessário generalizar esse processador, abrindo as portas para programas
 paralelos genericos executarem na GPU.
 
-O processamento da placa usada para os testes desse trabalho, a GeForce GTX460 que usa a arquitetura Fermi. sEssa arquitetura
+O processamento da placa usada para os testes desse trabalho, a GeForce GTX460 que usa a arquitetura Fermi. Essa arquitetura
 separa o fluxo de execução baseando-se no tipo de operações que serão executadas nela. Existe um fluxo para
 operações gráficas e outro para operações genericas. Vamos estudar o fluxo generico abaixo.
 
@@ -26,7 +26,7 @@ processadores.
 
 O código que será executado em cada processador é chamado de Kernel. Então, ao executar um kernel na GPU, o hardware criará threads,
 cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada para um processador diferente. Como
-as threads são distribuidas pelos SMs varia com a linguagem usada pelo kernel.
+as threads são distribuidas pelos SMs varia com a linguagem usada para se comunicar com a GPU.
 
 Outra parte importante do hardware é a memória. A memória na GPU é limitada em relação à da CPU. GPUs tem, em média, 1GB
 de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia de dados da memória principal do computador para a memória 
@@ -50,16 +50,21 @@ do programa.
 
 \subsection{CUDA}
 Compute Unified Device Architecture (CUDA) é uma arquitetura de programação para GPUs criada pela NVIDIA.
-A versão 1.0 foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
+Ele adiciona suas diretrizes para as linguagens C, C++, FORTRAN e Java, permitindo que elas usem a GPU.
+Esse trabalho usa o CUDA junto com a linguagem C.
+A versão 1.0 do CUDA foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
 e ele só da suporte para GPUs NVIDIA.
+
+Para uma função executar na GPU ela precisa ser invocada de um programa da CPU. Chamamos esse programa de \textit{Host}
+e a GPU onde o kernel irá executar de \textit{Device}.
 
 O CUDA implementa um conjunto virtual de instruções e memória, tornando os programas retroativos. O compilador
 primeiro compila o código em C para um intermediário, chamado de PTX, que depois será convertido em linguagem
-de máquina. Na conversão do PTX para linguagem de máquina o compilador verifica quais instruções o hardware
-suporte e converte o código para usar as instruções corretas. Novamente, para obter o maior desempenho possível,
-é importante saber para qual versão o código final será compilado, pois na passagem do código de uma versão
-maior para uma menor não existe a garantia que o algoritmo seguira as mesmas instruções, o compilador pode
-mudar um conjunto de instruções para outro menos eficiênte, ou em alguns casos, algumas instruções não existem em
+de máquina. Na conversão do PTX para linguagem de máquina o compilador verifica quais instruções o device
+suporta e converte o código para usar as instruções corretas.
+Novamente, para obter o maior desempenho possível, é importante saber para qual versão o código final será compilado, 
+pois na passagem do código de uma versão maior para uma menor não existe a garantia que o algoritmo seguira as mesmas instruções, 
+o compilador pode mudar um conjunto de instruções para outro menos eficiênte, ou em alguns casos, algumas instruções não existem em
 versões mais antigas do hardware.
 
 A inicialização dos recursos que o CUDA necessita para a comunicação com a GPU é feita no background da
@@ -67,6 +72,26 @@ aplicação no momento da primeira chamada de alguma das diretivas do CUDA. Essa
 tempo maior de execução que chamadas subsequentes a mesma diretiva.
 
 \subsubsection{Modelo de Programação}
+Um kernel no CUDA é uma função C que será executada paralelamente n vezes em n threads diferentes na GPU. Um kernel pode ser
+definido em qualquer lugar do seu código, usando a declaração \verb#__global__# do lado esquerdo do tipo de retorno do kernel.
+Para invocar um kernel, o \textit{Host} faz a chamada de uma função com a sintaxe parecida com o C, mas usa uma configuração de
+execução definida pelo CUDA, que usa a sintaxe \verb#<<<...>>># junto da chamada da função. Os parametros da configuração são
+o número de blocos de threads e o número de threads por blocos. Para somar dois vetores de tamanho M e guardar o resultado num
+outro vetor, o código é o seguinte:
+
+\begin{verbatim}
+  __global__ void MatrixMulti ( float* a, float* b, float* c) { 
+    ...                        
+    a[i] = b[i] + c[i];        
+    ...                        
+  }
+                            
+  int main () {               
+    ...                       
+    VecAdd<<<1,M>>>(a, b, c)  
+    ...                       
+  }                                 
+\end{verbatim}
 
 \subsubsection{Hierarquia de Memória}
 No CUDA, a memoria é separada lógicamente em 4 locais:
@@ -101,8 +126,10 @@ GPUs com Compute Cabapility 2.0 acima podem alocar memória dentro do device em 
 \subsubsection{Modelo de Execução}
 FALAR DE COMPUTE CAPABILITY
 
-FALAR SOBRE THREADS, BLOCOS, WARPS E GRIDS
-\subsubsection{Modelo de Plataforma}
+FALAR SOBRE THREADS, BLOCOS, WARPS E GRIDS, PTX
+\subsubsection{Modelo de Plataforma
+
+}
 SOBRE INICIALIZAÇÃO DO CUDA
 
 ALOCAÇÃO DE MEMORIA
