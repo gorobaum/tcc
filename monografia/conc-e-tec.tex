@@ -65,13 +65,22 @@ A inicialização dos recursos que o CUDA necessita para a comunicação com a G
 aplicação no momento da primeira chamada de alguma das diretivas do CUDA. Essa primeira diretiva terá um
 tempo maior de execução que chamadas subsequentes a mesma diretiva.
 \subsubsection{Modelo de Memória}
-No CUDA, toda thread tem uma memoria própria, todo bloco de threads tem uma memoria compartilhada, e todas as grids tem
-acesso a memoria global. O acesso a memoria se da por transações. A memoria global pode ser acessada em blocos de 32, 64 ou 128 bytes.
-Imagine qque uma thread precisa ler o byte na posição 130. Se o tamanho do bloco for 64, essa thread ira ler da posição 128 até a 191.
+No CUDA, a memoria é separada em 4 locais:
+\begin{itemize}
+  \item Registradores - Toda variável de uma thread fica em registradores.
+  \item Memória Local - Memória acessivel por cada thread separadamente, mas de uso pouco provável. Ela só é usada se
+          não existe mais espaço nos registradores ou se o compilador não ter certeza sobre o tamanho de um vetor.
+  \item Memória Compartilhada - Cada bloco de threads tem uma memória compratilhada. A memória compartilhada é separada em
+          pequenos blocos independentes. Se uma requisição de leitura tem n endereços em n blocos diferentes, o tempo de leitura
+          desses n endereços é igual ao tempo de leitura de 1 endereço. Caso duas leituras caiam no mesmo bloco, elas serão
+          serializadas. A memória compatilhada fica em chips dentro dos SMs, logo seu acesso é mais rápido do que o acesso a
+          memória global.
+  \item Memória Global - A memória global é acessivel por qualquer bloco em execução em um device. A memoria global não é
+          resetada após a execução de um kernel, então chamadas subsequentes de um mesmo kernel simplesmente leêm os resultados
+          da memória global.
+\end{itemize}
 
-FALAR SOBRE ALOCAÇÃO DE MEMORIA
-
-FALAR SOBRE POSICIONAMENTO DE MEMORIA
+GPUs com Compute Cabapility 2.0 acima podem alocar memória dentro do device em tempo de execução. 
 
 \subsubsection{Modelo de Execução}
 FALAR DE COMPUTE CAPABILITY
