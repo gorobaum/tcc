@@ -32,9 +32,9 @@ Outra parte importante do hardware é a memória. A memória na GPU é limitada 
 de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia de dados da memória principal do computador para a memória 
 principal da GPU. A transmissão é feita por um barramento PCI Express, com velocidades de até 16GB/s, dado que o
 barramento esteja sendo usado somente para isso. Essa transmissão é a parte mais lenta de todo o
-processo de execução na GPU. Em alguns casos é mais viável fazer algumas operações de baixar eficiência numa GPU do que
-retornar os dados computados numa GPU para a CPU e passá-los de volta para a GPU para mais operações e retornar esses
-dados para a CPU. 
+processo de execução na GPU e dado isso, em alguns casos é mais viável executar na GPU um pedaço do seu programa que seria executado
+na CPU do que retornar os dados computados na GPU para a CPU, executar esse pedaço especifico, e passá-los de volta para a GPU 
+para mais operações e novamente retornar esses dados para a CPU no final, passando duas vezes a mais pelo PCI Express. 
 
 Cada SM tem um bloco de memória de 64KB. Esse bloco pode ser configurado para 16KB de memória compartilhada e 48KB
 de cache L1 ou vice versa. A memória principal da placa é de 1024MB com conexões de 256 bits. A placa também tem um
@@ -81,9 +81,8 @@ outro vetor, o código é o seguinte:
 
 \begin{verbatim}
   __global__ void MatrixMulti ( float* a, float* b, float* c) { 
-    ...                        
+    int i = threadIdx.x;
     a[i] = b[i] + c[i];        
-    ...                        
   }
                             
   int main () {               
@@ -92,6 +91,24 @@ outro vetor, o código é o seguinte:
     ...                       
   }                                 
 \end{verbatim}
+
+No kernel acima, a linha \verb#int i = threadIdx.x# atribui a variável i o valor do indice da thread atual na primeira dimensão. 
+A estrutura threadIdx é um vetor de 3 dimensões, logo as threads podem ser organizadas em 1, 2 ou 3 dimensões dentro de um device.
+As threads são organizadas por blocos. Cada bloco tem dimensões maleáveis, mas as GPUs atuais limitam para 1024 o númeor máximo
+de threads por blocos. Cada bloco é lançado para execução em um processador diferente. Blocos são organizados em grids, que tem
+seu tamanho configurado na chamada o kernel, bem como o tamanho de cada bloco. No nosso exemplo acima, na linha
+\verb#VecAdd<<<1,M>>>(a,b,c)#, o 1 determina o número de blocos e o M o número de threads por bloco.
+
+O CUDA supoem que todos os blocos podem ser executados de maneira independende, ou seja, eles podem executar tanto paralelamente
+quanto sequencialmente. Com isso, é possivel que o desempenho do código aumente em GPUs com mais processadores, sem que o programador
+tenha que modificar o código.
+
+O CUDA sabe qual instruções ele pode executar dentro de um device baseando-se no seu Compute Capability (Capacidade Computacional). 
+A Compute Capability de um device são dois números, um que representa a arquitetura do device, e outro que representa melhorias numa
+arquitetura.
+A arquitetura \textit{Tesla}, a primeira da NVIDIA a dar suporte a GPGPU, tem Compute Capability 1.x, a seguinte, a \textit{Tesla},
+tem 2.x e a atual, a \textit{Kepler}, tem 3.x. Dentro de cada arquitetura, podem existir melhorias nas instruções, que são
+refletidas no número após o ponto, ou seja, uma placa com Compute Capability 2.1 tem instruções que uma 2.0 não tem.
 
 \subsubsection{Hierarquia de Memória}
 No CUDA, a memoria é separada lógicamente em 4 locais:
@@ -121,15 +138,9 @@ que ele quer que aquele elemento fique na memória. Os possiveis qualificadores 
                             da memória. Isso é importante pois o compilador pode fazer otimizações com o código sabendo dessa informação.   
 \end{itemize}
 
-GPUs com Compute Cabapility 2.0 acima podem alocar memória dentro do device em tempo de execução. 
+GPUs com Compute Cabapility maior ou igual a 2.0 podem alocar memória dentro do device em tempo de execução. 
 
-\subsubsection{Modelo de Execução}
-FALAR DE COMPUTE CAPABILITY
-
-FALAR SOBRE THREADS, BLOCOS, WARPS E GRIDS, PTX
-\subsubsection{Modelo de Plataforma
-
-}
+\subsubsection{Modelo de Plataforma}
 SOBRE INICIALIZAÇÃO DO CUDA
 
 ALOCAÇÃO DE MEMORIA
