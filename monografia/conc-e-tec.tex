@@ -12,21 +12,21 @@ com o aumento do desempenho das GPUs, que alguns supercomputadores começaram a 
 \subsection{GPU}
 A primeira GPU foi a GeForce 256, lançada em 1999. O hardware seguia um pipeline com 2 processos, um que aplicava transformações
 em vértices e outro em pixels. Em 2001, a GeForce 3 trouxe o primeiro processador de vértices programável. Em 2005 a primeira
-GPU com um processador unificado, usado tanto para pixels como para vértices, foi lançada para o console XBox 360. Para unificar
-os 2 processos do pipeline num único processador foi necessário generalizar esse processador, abrindo as portas para programas
-paralelos genericos executarem na GPU.
+GPU com um processador unificado, usado tanto para operações em pixels como em vértices, foi lançada para o console XBox 360. 
+Para unificar os 2 processos do pipeline num único processador foi necessário generalizar esse processador, e essa generalização
+abriu as portas para programas genericos executarem na GPU.
 
-O processamento da placa usada para os testes desse trabalho, a GeForce GTX460 que usa a arquitetura Fermi. Essa arquitetura
-separa o fluxo de execução baseando-se no tipo de operações que serão executadas nela. Existe um fluxo para
-operações gráficas e outro para operações genericas. Vamos estudar o fluxo generico abaixo.
+A placa usada para os testes desse trabalho, a GeForce GTX460, usa a arquitetura Fermi, a segunda mais nova arquitetura da NVIDIA para
+GPUs. Essa arquitetura separa o fluxo de execução baseando-se no tipo de aplicação que será executada nela. Existe um fluxo para
+aplicações gráficas e outro para aplicações genéricas, que é o foco desse trabalho. Vamos estudar o fluxo generico abaixo.
 
 A placa contém um escalonador implementado em hardware para threads. Ele é responsável por escalonar as threads que serão
-executadas nos streaming multiprocessors (SM). Cada SM tem 48 processadores. A Geforce GTX 460 tem 7 SMs, totalizando 336
-processadores. 
+executadas nos streaming multiprocessors (SM). Os SM são conjuntos de 48 processadores, um pequeno bloco de memória própria,
+um cache de instruções e 8 unidades de funções especiais. A Geforce GTX 460 tem 7 SMs, totalizando 336 processadores.
 
-O código que será executado em cada processador é chamado de Kernel. Então, ao executar um kernel na GPU, o hardware criará threads,
-cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada para um processador diferente. Como
-as threads são distribuidas pelos SMs varia com a linguagem usada para se comunicar com a GPU.
+O código que será executado em cada processador é chamado de \textbf{kernel}. Então, ao executar um kernel na GPU, o 
+hardware criará threads, cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada 
+para um processador diferente. Como as threads são distribuidas pelos SMs varia com a linguagem usada para se comunicar com a GPU.
 
 Outra parte importante do hardware é a memória. A memória na GPU é limitada em relação à da CPU. GPUs tem, em média, 1GB
 de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia de dados da memória principal do computador para a memória 
@@ -49,7 +49,7 @@ não cria um padrão de buscas frequentes na memoria principal, que acabaria cri
 do programa.
 
 \subsection{CUDA}
-Compute Unified Device Architecture (CUDA) é uma arquitetura de programação para GPUs criada pela NVIDIA.
+\textit{Compute Unified Device Architecture} (CUDA) é uma arquitetura de programação para GPUs criada pela NVIDIA.
 Ele adiciona suas diretrizes para as linguagens C, C++, FORTRAN e Java, permitindo que elas usem a GPU.
 Esse trabalho usa o CUDA junto com a linguagem C.
 A versão 1.0 do CUDA foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
@@ -60,22 +60,35 @@ e a GPU onde o kernel irá executar de \textit{Device}.
 
 O CUDA implementa um conjunto virtual de instruções e memória, tornando os programas retroativos. O compilador
 primeiro compila o código em C para um intermediário, chamado de PTX, que depois será convertido em linguagem
-de máquina. Na conversão do PTX para linguagem de máquina o compilador verifica quais instruções o device
+de máquina. Na conversão do PTX para linguagem de máquina o compilador verifica quais instruções o \textit{device}
 suporta e converte o código para usar as instruções corretas.
-Novamente, para obter o maior desempenho possível, é importante saber para qual versão o código final será compilado, 
+Para obter o maior desempenho possível, é importante saber para qual versão o código final será compilado, 
 pois na passagem do código de uma versão maior para uma menor não existe a garantia que o algoritmo seguira as mesmas instruções, 
 o compilador pode mudar um conjunto de instruções para outro menos eficiênte, ou em alguns casos, algumas instruções não existem em
 versões mais antigas do hardware.
 
+\subsubsection{Modelo de Plataforma}
 A inicialização dos recursos que o CUDA necessita para a comunicação com a GPU é feita no background da
 aplicação no momento da primeira chamada de alguma das diretivas do CUDA. Essa primeira diretiva terá um
-tempo maior de execução que chamadas subsequentes a mesma diretiva.
+tempo maior de execução que chamadas subsequentes a mesma diretiva. Na inicialização o CUDA identifica
+os \textit{devices} existentes e escolhe um deles para ser o responsável pelas execuções posteriores.
+
+O próximo passo é a alocação de memória no \textit{device}. As operações de leitura de memória de um kernel são feitas somente
+na memória de um \textit{device}. A alocação dessa memória é feita pelo \textit{host}, usando \verb#cudaMalloc()#. 
+Para copiar a memória do \textit{host} para o \textit{device} ou vice-versa,
+\verb#cudaMemcpy()# é usada. Para liberar o espaço alocado após a execução basta usar o \verb#cudaFree()#.
+Todas essas diretivas recebem um ponteiro do \textit{host}, usado para o controle sobre qual posição da memória está sendo
+operado em cada operação.
+
+O CUDA dá suporte a alocação de vetores em duas ou três dimensões através de: \verb#cudaMallocPitch()# e 
+\verb#cudaMalloc3D()#, respectivamente. É necessário usar as modificações dos comandos \verb#Memcpy# para
+duas ou três dimensões também, que são: \verb#cudaMemcpy2D()#, \verb#cudaMemcpy3D()#.
 
 \subsubsection{Modelo de Programação}
-Um kernel no CUDA é uma função C que será executada paralelamente n vezes em n threads diferentes na GPU. Um kernel pode ser
+Um kernel no CUDA é uma função C que será executada paralelamente $n$ vezes em $n$ threads diferentes na GPU. Um kernel pode ser
 definido em qualquer lugar do seu código, usando a declaração \verb#__global__# do lado esquerdo do tipo de retorno do kernel.
-Para invocar um kernel, o \textit{Host} faz a chamada de uma função com a sintaxe parecida com o C, mas usa uma configuração de
-execução definida pelo CUDA, que usa a sintaxe \verb#<<<...>>># junto da chamada da função. Os parametros da configuração são
+Para invocar um kernel, o \textit{host} faz a chamada de uma função com a sintaxe parecida com o C, mas usa uma configuração de
+execução definida pelo CUDA, que usa a sintaxe \verb#<<<...>>># junto da chamada da função. Os parâmetros da configuração são
 o número de blocos de threads e o número de threads por blocos. Para somar dois vetores de tamanho M e guardar o resultado num
 outro vetor, o código é o seguinte:
 
@@ -93,19 +106,19 @@ outro vetor, o código é o seguinte:
 \end{verbatim}
 
 No kernel acima, a linha \verb#int i = threadIdx.x# atribui a variável i o valor do indice da thread atual na primeira dimensão. 
-A estrutura threadIdx é um vetor de 3 dimensões, logo as threads podem ser organizadas em 1, 2 ou 3 dimensões dentro de um device.
-As threads são organizadas por blocos. Cada bloco tem dimensões maleáveis, mas as GPUs atuais limitam para 1024 o númeor máximo
-de threads por blocos. Cada bloco é lançado para execução em um processador diferente. Blocos são organizados em grids, que tem
-seu tamanho configurado na chamada o kernel, bem como o tamanho de cada bloco. No nosso exemplo acima, na linha
+A estrutura \verb#threadIdx# é um vetor de 3 dimensões, logo as threads podem ser organizadas em 1, 2 ou 3 dimensões dentro de um
+\textit{device}. As threads são organizadas por blocos. Cada bloco tem dimensões maleáveis, mas as GPUs atuais limitam para 1024 o 
+número máximo de threads por blocos. Cada bloco é lançado para execução em um processador diferente. Blocos são organizados em 
+grids, que tem seu tamanho configurado na chamada o kernel, bem como o tamanho de cada bloco. No nosso exemplo acima, na linha
 \verb#VecAdd<<<1,M>>>(a,b,c)#, o 1 determina o número de blocos e o M o número de threads por bloco.
 
-O CUDA supoem que todos os blocos podem ser executados de maneira independende, ou seja, eles podem executar tanto paralelamente
+O CUDA supõem que todos os blocos podem ser executados de maneira independende, ou seja, eles podem executar tanto paralelamente
 quanto sequencialmente. Com isso, é possivel que o desempenho do código aumente em GPUs com mais processadores, sem que o programador
 tenha que modificar o código.
 
-O CUDA sabe qual instruções ele pode executar dentro de um device baseando-se no seu Compute Capability (Capacidade Computacional). 
-A Compute Capability de um device são dois números, um que representa a arquitetura do device, e outro que representa melhorias numa
-arquitetura.
+O CUDA sabe qual instruções ele pode executar dentro de um \textit{device} baseando-se no seu Compute Capability 
+(Capacidade Computacional). A Compute Capability de um \textit{device} são dois números, um que representa a arquitetura do 
+\textit{device}, e outro que representa melhorias numa arquitetura.
 A arquitetura \textit{Tesla}, a primeira da NVIDIA a dar suporte a GPGPU, tem Compute Capability 1.x, a seguinte, a \textit{Tesla},
 tem 2.x e a atual, a \textit{Kepler}, tem 3.x. Dentro de cada arquitetura, podem existir melhorias nas instruções, que são
 refletidas no número após o ponto, ou seja, uma placa com Compute Capability 2.1 tem instruções que uma 2.0 não tem.
@@ -122,7 +135,7 @@ No CUDA, a memoria é separada lógicamente em 4 locais:
           desses n endereços é igual ao tempo de leitura de 1 endereço. Caso duas leituras caiam no mesmo bloco, elas serão
           serializadas. A memória compatilhada fica em chips dentro dos SMs, logo seu acesso é mais rápido do que o acesso a
           memória global.
-  \item Memória Global - A memória global é acessivel por qualquer bloco em execução em um device. A memoria global não é
+  \item Memória Global - A memória global é acessivel por qualquer bloco em execução em um \textit{device}. A memoria global não é
           resetada após a execução de um kernel, então chamadas subsequentes de um mesmo kernel simplesmente leêm os resultados
           da memória global. Existe um pedaço da memória global reservada para valores constantes do programa.
 \end{itemize}
@@ -138,18 +151,34 @@ que ele quer que aquele elemento fique na memória. Os possiveis qualificadores 
                             da memória. Isso é importante pois o compilador pode fazer otimizações com o código sabendo dessa informação.   
 \end{itemize}
 
-GPUs com Compute Cabapility maior ou igual a 2.0 podem alocar memória dentro do device em tempo de execução. 
-
-\subsubsection{Modelo de Plataforma}
-SOBRE INICIALIZAÇÃO DO CUDA
-
-ALOCAÇÃO DE MEMORIA
-
-INICIALIZAÇÃO DAS THREADS, KERNEL
-
+GPUs com Compute Cabapility maior ou igual a 2.0 podem alocar memória dentro do \textit{device} em tempo de execução.
 
 \subsection{OpenCL}
+Open Computing Language (OpenCL) é uma framework aberta para programação genérica para varios procesadores, dentre eles GPUs e CPUs.
+OpenCL da suporte para sistemas embarcados, sistemas pessoais, corporativos e até HPC. Ele consegue isso criando uma interface
+de baixo nível, ou seja, o mais próximo do hardware possivel, e mantendo auto desempenho, com uma abstração protátil. O OpencL
+também é uma API para controle de aplicações paralelas em sistemas com processadores heterogéneos. O OpenCL consegue, numa mesma
+aplicação, reconhecer vários processadores diferentes dentro de um mesmo computador, e executar códigos distintos entre eles,
+coordenando os hardwares. Aqui, como no CUDA, a parte do código executado na CPU é chamada de \textit{Host} e o hardware
+que executa os kernels de \textit{Devices}. É importante lembrar que dado essa generalização do OpenCL, é possível que a CPU
+onde o código do \textit{host} esteja executando seja usada para rodar um kernel também, e essa CPU passa a ser um \textit{device}
+também.
+
+O framework do OpenCL pode ser explicado usando 4 modelos hirarquicos, que são:
+\begin{itemize}
+  \item Plataforma
+  \item Memória
+  \item Execução
+  \item Programação
+\end{itemize}
+
+\subsubsection{Modelo de Plataforma}
+No OpenCL existe um \textit{host} conectado a um ou mais \textit{devices}. Cada \textit{device} é composto de uma ou mais 
+Unidade de Computação (CU), e cada CU é composto de um ou mais Elemento de Processamento (PE). O processamento dentro de um device
+ocorre num PE. Os PE podem executar tanto no modelo de Instrução Unica Multiplos Dados (SIMD) ou
+
+O responsável por iniciar a execução dos kernels nos PE é o \textit{host}.  
+
 \subsubsection{Modelo de Memória}
 \subsubsection{Modelo de Execução}
-\subsubsection{Modelo de Plataforma}
 \subsubsection{Modelo de Programação}
