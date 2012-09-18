@@ -164,7 +164,7 @@ que executa os kernels de \textit{Devices}. É importante lembrar que dado essa 
 onde o código do \textit{host} esteja executando seja usada para rodar um kernel também, e essa CPU passa a ser um \textit{device}
 também.
 
-O framework do OpenCL pode ser explicado usando 4 modelos hirarquicos, que são:
+O framework do OpenCL pode ser explicado usando 4 modelos hierarquicos, que são:
 \begin{itemize}
   \item Plataforma
   \item Memória
@@ -174,10 +174,10 @@ O framework do OpenCL pode ser explicado usando 4 modelos hirarquicos, que são:
 
 \subsubsection{Modelo de Plataforma}
 No OpenCL existe um \textit{host} conectado a um ou mais \textit{devices}. Cada \textit{device} é composto de uma ou mais 
-Unidade de Computação (CU), e cada CU é composto de um ou mais Elemento de Processamento (PE). O processamento dentro de um device
-ocorre num PE. Os PE podem executar tanto no modelo de Instrução Unica Multiplos Dados (SIMD) ou
-
-O responsável por iniciar a execução dos kernels nos PE é o \textit{host}.  
+Compute Unit (CU), e cada CU é composto de um ou mais Processing Element (PE). O processamento dentro de um \textit{device}
+ocorre num PE. Os PEs podem executar tanto no modelo de SIMD (Instrução Unica, Multiplos Dados) ou SPMD 
+(Procesuso Unico, Multiplos Dados). No SIMD, todas as threads executão a mesma operação ao mesmo tempo em dados diferentes
+e no SPMD cada thread tem um ponteiro de instrução próprio. O responsável por iniciar a execução dos kernels nos PE é o \textit{host}.
 
 \subsubsection{Modelo de Memória}
 \subsubsection{Modelo de Execução}
