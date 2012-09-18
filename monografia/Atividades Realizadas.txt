@@ -1,0 +1,12 @@
+Atividades Realizadas:
+1. Implementação dos kernels em CUDA.
+2. Implementação dos kernels em OpenCL.
+3. Estudo das abstrações do CUDA.
+4. Estudo das abstrações do OpenCL.
+5. Compilação dos 4 kernels diferentes para o arquivo .PTX.
+
+Atividades Pendentes:
+1. Comparação entre as abstrações.
+2. Aproximação da logica dos kernels. 
+3. Comparação da eficinecia entre os kernels.
+4. Comparação dos .PTX gerados pelos kernels.
