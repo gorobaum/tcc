@@ -5,11 +5,14 @@ de processamento gráfico (GPU). O termo GPGPU (General-purpose computing on gra
 usado para denotar o uso de GPUs para executar programas de mais amplo espectro.
 
 Duas linguagens são muito utilizadas atualmente para programação em ambientes GPGPU, OpenCL (Open Computing Language) 
-e CUDA (Compute Unified Device Architecture).
+e CUDA (Compute Unified Device Architecture). OpenCL é reconhecido como a melhor linguagem para ambientes GPGPU
+genéricos, enquanto o CUDA é a melhor para ambientes NVIDIA.
 
 \subsection{Objetivos}
-O objetivo do estudo é comparar a eficiência de programas escritos nessas duas linguagens rodando em uma placa NVidia GeForce GTX 460.
+O objetivo do estudo é comparar a eficiência de programas escritos nessas duas linguagens rodando em uma placa NVidia GeForce GTX 460
+e comparar o modo com que eles abstraem uma GPU, tornando possível rodar programas genéricos na mesma.
 
 \subsection{Problemas a serem resolvidos}
-Para realizar a comparação de eficiência entre as linguagens é necessário desenvolver uma função igual nas duas linguagens que será usada
-para profiling, e além disso, entender como as duas linguagens abstraem os recursos da GPU, para entender o resultado do profiling.
+Para realizar a comparação de eficiência entre as linguagens é necessário desenvolver dois algoritmos para testes, um que verifique
+a capacidade de processamento da linguagem e outro a capacidade de manipular memória. Além disso, é necessário comparar as abstrações
+para entender de onde vem a diferença de desempenho entre as linguagens.
