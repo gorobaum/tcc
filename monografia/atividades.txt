@@ -7,6 +7,5 @@ Atividades Realizadas:
 
 Atividades Pendentes:
 1. Comparação entre as abstrações.
-2. Aproximação da logica dos kernels. 
-3. Comparação da eficinecia entre os kernels.
-4. Comparação dos .PTX gerados pelos kernels.
+2. Comparação da eficinecia entre os kernels.
+3. Comparação dos .PTX gerados pelos kernels.
