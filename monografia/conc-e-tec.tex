@@ -180,5 +180,16 @@ ocorre num PE. Os PEs podem executar tanto no modelo de SIMD (Instrução Unica,
 e no SPMD cada thread tem um ponteiro de instrução próprio. O responsável por iniciar a execução dos kernels nos PE é o \textit{host}.
 
 \subsubsection{Modelo de Memória}
+As threads em execução num kernel tem acesso a 4 locais distintos de memória:
+
+\begin{enumerate}
+  \item Memória Global - Toda thread em execução num kernel tem acesso de escrita e leitura a essa região da memória.
+  \item Memória Constante - Toda thread em execução num kernel tem acesso de leitura a essa região da memória. Somente o \textit{host} tem acesso de
+    escrita a essa parte da memória.
+  \item Memória Local - Todas as threads de um work-group tem acesso a essa região da memória. Dependendo do hardware, ela pode ser colocada numa região próxima
+    da região de execuçaõ de um work-group ou na memória principal da GPU.
+  \item Memória Privada - Região privada de uma thread, somente ela tem acesso a está região.
+\end{enumerate}
+
 \subsubsection{Modelo de Execução}
 \subsubsection{Modelo de Programação}
