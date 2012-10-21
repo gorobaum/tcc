@@ -1,8 +1,7 @@
-\documentclass{beamer}
-\usepackage[t1]{fontenc}
+\documentclass[brazil]{beamer}
+\usepackage[brazilian]{babel}
 \usepackage[utf8]{inputenc}
-\usepackage{lmodern}
-\usetheme{juanlespins}
+\usetheme{JuanLesPins}
 
 \title{Comparação de eficiência entre OpenCL e CUDA}
 \author{Thiago de Gouveia Nunes}
@@ -12,27 +11,24 @@
 \frame{\titlepage}
 
 %-------------------------------------
-\section{Motivação}
-%-------------------------------------
-
-\frame{
-  \frametitle{Motivação}
-  \begin{itemize}
-    \item Em GPGPU, é natural se preocupar com a máxima performance dos programas. Esse trabalho consiste na comparação de desempenho e das
-    abstração de uma GPU entre duas plataformas para programação paralela em GPUs, \textbf{OpenCL} e \textbf{CUDA}.
-  \end{itemize}
-}
-
-
-%-------------------------------------
 \section{Tecnologias}
 %-------------------------------------
 
 \frame{
   \frametitle{GPGPU}
-  É usar uma GPU, pricipalmente usada para Computação Gráfica, para computar aplicações que seriam mandadas para uma CPU. A principal vantagem disso é
-  o paralelismo. A GPU tem vários cores SIMD, que são usados para resolver problemas que levariam muito mais tempo numa CPU ( como uma multiplicação de matriz )
-  em poucos milisegundos. 
+  É usar uma GPU (Graphics Processing Unit), uma placa criada com foco em Computação Gráfica, 
+  para processamento de propósito geral. A arquitetura de uma GPU basicamente é uma região de memória global, um escalonador
+  de threads e vários processadores organizados em pequenos grupos. Ela executa usando o método \textbf{SIMD} 
+  (Single Instruction, Multiple Data), em que toda thread recebe a mesma instrução mas a executa em dados diferentes.
+  Isso faz com que uma GPU resolva problemas altamente paralelizáveis com poucos dados e muito processamento, 
+  como uma multiplicação de matrizes, mais rapidamente que CPUs multicore ou sistemas distribuídos.
+}
+
+\frame{
+  \frametitle{GPGPU}
+  Existem 2 frameworks fortes no mercado para GPGPU, o \textbf{CUDA} (Compute Unified Device Architecture) feita pela
+  \textit{NVIDIA}, e o \textbf{OpenCL} (Open Computing Language) feito pelo Khronos Group, o mesmo grupo que mantêm o
+  OpenGL. O CUDA é 
 }
 
 \frame{

@@ -26,22 +26,30 @@
 
 \frame{
   \frametitle{GPGPU}
-  Existem 2 frameworks fortes no mercado para GPGPU, o \textbf{CUDA} (Compute Unified Device Architecture) feita pela
-  \textit{NVIDIA}, e o \textbf{OpenCL} (Open Computing Language) feito pelo Khronos Group, o mesmo grupo que mantêm o
-  OpenGL. O CUDA é 
+  Existem 2 linguagens fortes no mercado para GPGPU, o \textbf{CUDA} (Compute Unified Device Architecture) feita pela
+  \textit{NVIDIA}, e o \textbf{OpenCL} (Open Computing Language) feito pelo Khronos Group, o mesmo grupo responsável pelo
+  OpenGL. O objetivo do trabalho é comparar esses dois frameworks através de testes de desempenho e comparação nas abstrações
+  feitas para utilizar a GPU.
 }
 
 \frame{
   \frametitle{OpenCL}
-  O OpenCL é uma framework de programação paralela para sistemas híbridos. Isso quer dizer que podemos rodar 
-  aplicações que usam OpenCL tanto em CPUs como em GPUs.
-  OpenCL foi uma iniciativa da Apple, e depois sofreu várias melhorias por times de várias empresas, entre elas Intel 
-  e Nvidia. OpenCL pode ser usado em C e C++. %Colocar o que é OpenCL e SIMD
+  O OpenCL é uma linguagem de programação paralela para sistemas híbridos. Ele da suporte para sistemas baseados tanto em GPU, CPU ou
+  outros processadores. O OpenCL é open source e foi uma iniciativa da Apple, que depois sofreu melhorias feitas por times de várias 
+  empresas, dentre elas Intel, IBM e NVIDIA. OpenCL pode ser usado em conjunto tanto com C quanto com o C++.
 }
 
 \frame{
   \frametitle{CUDA}
-  CUDA é uma plataforma para programação paralela em GPUs desenvolvida pela Nvidia. Ela suporta C, C++, Java, Python, Fortran, etc. % referencia, explicar melhor as diferencas entre opencl
+  CUDA é uma linguagem para programação paralela em GPUs desenvolvida pela NVIDIA. Atualmente só existe 1 compilador
+  de CUDA para placas NVIDIA, o \textit{nvcc}. O CUDA é proprietário. Ela suporta C e C++ e existem wrappers para 
+  Java, Python e Fortran.
+}
+
+\frame{
+  \frametitle{GPU}
+  Antes de entrar na comparação entre as linguagens, vamos discutir sobre a GPU usada para os testes, uma GeForce GTX 460 SE.
+  % COLOCAR IMAGEM DA GEFORCE 460.
 }
 
 %-------------------------------------
@@ -53,12 +61,10 @@
   A explicação dos termos técnicos que serão usados:
   \begin{itemize}
     \item[Kernel] Função que será executada em cada processador da placa de vídeo.
-    \item[Host]   Programa que será executado na CPU e tem a função de preparar o ambiente para o kernel e rodá-lo na GPU.
-    \item[SIMD]   \textit{Single Instrution, Multiple Data.} Os processadores das GPUs são desse tipo. Cada um recebe o mesmo código, mas roda usando dados diferentes.
-    \item[Device]   GPU ou CPU.
-    \item[CU]     \textit{Computer Unit}, um processador.
-    \item[PE]     \textit{Processing Element}, um core do processador.
-  \end{itemize} % colocar referencias, indicar palavras chave e seus significados, estrutura da placa de video.
+    \item[Host]   Programa que será executado na CPU e tem a função de preparar o ambiente para o kernel e iniciá-lo na GPU.
+    \item[SIMD]   \textit{Single Instrution, Multiple Data}. As GPU executão suas tarefas usando esse paradigma.
+    \item[Device]   Local onde os kernels serão executados, normalmente uma GPU ou CPU.
+  \end{itemize}
 }
 
 %-------------------------------------
@@ -132,18 +138,30 @@
 
 \frame{
   \frametitle{Ideia}
-  Para comparar a performance das duas plataformas, a ideia inicial é usar dois kernel's, um para comparar o tempo 
-  que cada um leva pra computar uma operação com muita movimentação de memória, e outro com alto processamento. 
-  Os kernel's em OpenCL já estão prontos e os de CUDA estão em andamento.
-} % colocar termos como memory bound, falar de memory x computings
+  Para comparar a performance das duas linguagens, foram usados dois tipos de kernel, um para cada tipo de operação predominante
+  no kernel. Os tipos de operações são:
+  \begin{itemize}
+    \item De memória, conhecido como kernel memory bound, quando o kernel tem mais acesso a memória que processamento.
+    \item De processamento, conhecido como kernel process bound, quando o kernel tem mais processamento que acesso a memória.
+  \end{itemize}
+}
+
+\frame{
+  \frametitle{Kernel Memory bound} 
+  Memory bound é um gargalo comum em GPGPU já que os dados vêm para a GPU através de um baramento PCI-Express, normalmente
+  utilizado por outras aplicações, criando um atraso no recebimento dos dados. Com os dados dentro da GPU, ainda temos o problema
+  de separar os dados entre os processadores da GPU e 
+  Para comparar a memória, foi usado um kernel que faz a cópia de uma matriz de floats.
+} 
 
 \frame{
   \frametitle{Kernel Memory bound}
-  Para comparar a cópia de memória, usamos um kernel que usa a GPU para copiar uma matriz de double em outra.
-} % como fazer o profiling e ver preempção ( comparação casa x bigfoot )
+  
+}
 
 \frame{
-  \frametitle{Kernel Computing bound}
+  \frametitle{Kernel Process bound}
+  Process bound 
   Para comparar o processamento, usamos um kernel que usa a GPU multiplicar duas matrizes de doubles.
   Obtemos o tempo real do processamento tirando o tempo de execução do kernel memory bound do tempo desse kernel.
 } % comparar o ptx, colocar o código dos kernels, comparar o tamanho, 
