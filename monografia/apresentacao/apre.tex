@@ -49,7 +49,7 @@
 \frame{
   \frametitle{GPU}
   Antes de entrar na comparação entre as linguagens, vamos discutir sobre a GPU usada para os testes, uma GeForce GTX 460 SE.
-  % COLOCAR IMAGEM DA GEFORCE 460.
+  % COLOCAR IMAGEM DA	 GEFORCE 460.
 }
 
 %-------------------------------------
@@ -62,8 +62,8 @@
   \begin{itemize}
     \item[Kernel] Função que será executada em cada processador da placa de vídeo.
     \item[Host]   Programa que será executado na CPU e tem a função de preparar o ambiente para o kernel e iniciá-lo na GPU.
-    \item[SIMD]   \textit{Single Instrution, Multiple Data}. As GPU executão suas tarefas usando esse paradigma.
-    \item[Device]   Local onde os kernels serão executados, normalmente uma GPU ou CPU.
+    \item[SIMD]   \textit{Single Instrution, Multiple Data}. As GPU executam suas tarefas usando esse paradigma.
+    \item[Device]   Hardware onde os kernels serão executados, normalmente uma GPU ou CPU.
   \end{itemize}
 }
 
@@ -84,15 +84,18 @@
 
 \frame{
   \frametitle{Modelo de Plataforma}
-  O modelo de plataforma é responsável por representar o Host ligado a um ou mais Devices, cada com um ou mais CU's, cada CU com um ou mais PE's.
-  A aplicação do OpenCL fica no Host, que é responsável por direcionar os kernel's para os PE's em cada Device
+  O modelo de plataforma é responsável por representar o Host ligado a um ou mais Devices. \\
+  Cada device é subdividido em Compute Units, e cada Compute Unit é composta de vários Processing Elements. \\
+  São os Processing Elements os responsáveis pelo processamento no OpenCL. \\
+  Nas Compute Units o processamento das threads é síncrono, ou seja, todas as threads estão executando a mesma linha do código
+  ao mesmo tempo.
 }
 
 \frame{
   \frametitle{Modelo de Execução}
   O modelo de execução representa o programa que roda no Host, e todos os Kernel's. O host prepara um contexto para a execução do kernel e o roda. \\
-  Quando o Kernel começa a executar, um espaço de indices é criado, onde cada indice representa uma cópia do kernel rodando. Esse espaço pode ter dimensão 1, 2 ou 3.
 }
+  Quando o Kernel começa a executar, um espaço de indices é criado, onde cada indice representa uma cópia do kernel rodando. Esse espaço pode ter dimensão 1, 2 ou 3.
 
 \frame{
   \frametitle{Contexto}
@@ -127,10 +130,13 @@
 }
 
 %-------------------------------------
-%\subsection{CUDA}
+\subsection{CUDA}
 %-------------------------------------
 
-%TODO
+\frame{
+  \frametitle{Plataforma}
+  O CUDA aceita somente um device ativo por vez.
+}
 
 %-------------------------------------
 \section{Comparação de Performance}
@@ -138,20 +144,16 @@
 
 \frame{
   \frametitle{Ideia}
-  Para comparar a performance das duas linguagens, foram usados dois tipos de kernel, um para cada tipo de operação predominante
-  no kernel. Os tipos de operações são:
-  \begin{itemize}
-    \item De memória, conhecido como kernel memory bound, quando o kernel tem mais acesso a memória que processamento.
-    \item De processamento, conhecido como kernel process bound, quando o kernel tem mais processamento que acesso a memória.
-  \end{itemize}
+  Para comparar a performance das duas linguagens foram usados dois tipos de kernel, um em que o desempenho está ligado ao acesso a
+  memória (memory bound) e outro que está ligado à velocidade de processamento (compute bound).
 }
 
 \frame{
   \frametitle{Kernel Memory bound} 
-  Memory bound é um gargalo comum em GPGPU já que os dados vêm para a GPU através de um baramento PCI-Express, normalmente
+  Memory bound é um gargalo comum em GPGPU já que os dados vêm para a GPU através de um barramento PCI-Express, normalmente
   utilizado por outras aplicações, criando um atraso no recebimento dos dados. Com os dados dentro da GPU, ainda temos o problema
-  de separar os dados entre os processadores da GPU e 
-  Para comparar a memória, foi usado um kernel que faz a cópia de uma matriz de floats.
+  de separar os dados entre os processadores da GPU e minimizar o número de conflitos de acesso de memória.
+  Para comparar a memória, foi usado um kernel que faz a cópia de uma matriz de floats para outras.
 } 
 
 \frame{
@@ -160,10 +162,16 @@
 }
 
 \frame{
-  \frametitle{Kernel Process bound}
-  Process bound 
-  Para comparar o processamento, usamos um kernel que usa a GPU multiplicar duas matrizes de doubles.
+  \frametitle{Kernel Compute bound}
+  Minimizar o custo do processamento é importante em GPUs já que estamos rodando nossas aplicações em centenas de
+  processadores ao mesmo tempo, fazendo o impacto de uma pequena melhoria no tempo de execução uma centena de vezes maior.
+  Para comparar o processamento, usamos um kernel que multiplica duas matrizes de doubles e guarda o valor numa terceira.
   Obtemos o tempo real do processamento tirando o tempo de execução do kernel memory bound do tempo desse kernel.
-} % comparar o ptx, colocar o código dos kernels, comparar o tamanho, 
+}
+
+\frame{
+  \frametitle{Kernel Compute bound}
+  
+}
 
 \end{document}
