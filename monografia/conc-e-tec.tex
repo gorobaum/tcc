@@ -161,8 +161,9 @@ também é uma API para controle de aplicações paralelas em sistemas com proce
 aplicação, reconhecer vários processadores diferentes dentro de um mesmo computador, e executar códigos distintos entre eles,
 coordenando os hardwares. Aqui, como no CUDA, a parte do código executado na CPU é chamada de \textit{Host} e o hardware
 que executa os kernels de \textit{Devices}. É importante lembrar que dado essa generalização do OpenCL, é possível que a CPU
-onde o código do \textit{host} esteja executando seja usada para rodar um kernel também, e essa CPU passa a ser um \textit{device}
-também.
+onde o código do \textit{host} esteja executando seja usada para rodar um kernel, e essa CPU passa a ser um \textit{device}
+ao mesmo tempo em que roda o \textit{host}. Tanto o fato do OpenCL ser aberto quanto o fato dele não se restringir a um
+hardware especifico fazem dele a linguagem mais usada para GPGPU fora de GPUs NVIDIA.
 
 O framework do OpenCL pode ser explicado usando 4 modelos hierarquicos, que são:
 \begin{itemize}
@@ -173,11 +174,74 @@ O framework do OpenCL pode ser explicado usando 4 modelos hierarquicos, que são
 \end{itemize}
 
 \subsubsection{Modelo de Plataforma}
-No OpenCL existe um \textit{host} conectado a um ou mais \textit{devices}. Cada \textit{device} é composto de uma ou mais 
-Compute Unit (CU), e cada CU é composto de um ou mais Processing Element (PE). O processamento dentro de um \textit{device}
-ocorre num PE. Os PEs podem executar tanto no modelo de SIMD (Instrução Unica, Multiplos Dados) ou SPMD 
+No OpenCL existe um \textit{host} conectado a um ou mais \textit{devices}. Os \textit{devices} são abstrações de uma GPU ou de uma CPU.
+Cada \textit{device} é composto de uma ou mais Compute Unit (CU), e cada CU é composto de um ou mais Processing Element (PE). 
+Por exemplo, uma CPU com 2 cores seria vista pelo OpenCL como um \textit{device} com uma Compute Unit e 2 PRocessing Elements. 
+O processamento dentro de um \textit{device} ocorre num PE. O processamento é iniciado atravez de \textit{comandos} que o \textit{host} 
+manda para o \textit{device}. Os PEs podem executar tanto no modelo de SIMD (Instrução Unica, Multiplos Dados) ou SPMD 
 (Procesuso Unico, Multiplos Dados). No SIMD, todas as threads executão a mesma operação ao mesmo tempo em dados diferentes
 e no SPMD cada thread tem um ponteiro de instrução próprio. O responsável por iniciar a execução dos kernels nos PE é o \textit{host}.
+
+O OpenCL tem suporte para varios tipos de \textit{devices} diferentes: GPUs, CPUs, DSP ou Cell/B.E. .
+Para manter a retrocompatibilidade do código, cada device guarda 3 números importantes para o OpenCL:
+\begin{itemize} 
+  \item A versão da plataforma - Indica qual a versão da API que o \textit{host} pode usar para se comunicar com o OpenCL.
+        Diz respeito ao contexto, objetos de memória, filas de comando e \textit{devices}.
+  \item A versão do \textit{device} - Indica qual a capacidade de um \textit{device}, como possíveis funções implementadas
+        em hardware ou limites de memória.
+  \item A versão da linguagem - Indica o número de features do OpenCL implementadas no \textit{device}.
+\end{itemize}
+
+O \textit{host} usa a versão da linguagem para determinar o que pode ou não ser feito no \textit{device} em momento de compilação.
+A versão da linguagem nunca é maior que a versão da plataforma, mas pode ser maior que a versão do \textit{device}.
+
+\subsubsection{Modelo de Execução}
+
+Com as plataformas definidas, vamos entender como o OpenCL cuida da execução dos kernels dentro de uma plataforma.
+Cada instância de um kernel rodando dentro de um Processing Element é chamada de Work-Item. Dentro de um \textit{device}
+é criado um conjunto de indices de até 3 dimensões, onde cada ponto dentro desse conjunto de indices é um work-item. 
+Como visto acima, cada work-item executa o mesmo código, mas com dados diferentes e, existinto pulos condicionais no código, 
+o caminho de execução pode váriar.
+
+Esse conjunto de indices é chamado de NDRange. Ele é definido por um vetor de tamanho N, N sendo o número de dimensões do
+NDRange, em que cada componente do vetor determina o tamanho de cada dimensão do NDRange. 
+
+Os work-items estão organizados dentro de work-groups. O OpenCL escalona a execução dos work-groups, ou seja, ele envia um 
+work-group para a execução, fazendo com que todos os work-items dentro dele sejam executados, e quando esse terminar sua 
+execução um novo work-group com novos work-items é enviado para execução até que todos os work-items sejam executados. 
+O número de dimensões do NDRange, de work-items por dimensão do NDRange e o número de work-items por dimensão de um work-group
+devem ser definidos pelo \textit{host} antes da chamada de execução do kernel. O número de work-items é definido pela multiplicação
+o número de work-items por dimensão do NDRange, e a quantidade de work-items por work-groups é definida pela multiplicação das dimensões
+de um work-group.
+
+Cada work-item é identificado através de um ID único global ou um ID único local dentro de um work-group. Cada work-group é identificado
+por um ID global único, logo um work-item pode ser identificado ou pelo seu ID global ou pela combinação do seu ID local e do ID do seu 
+work-group. Esses IDs são tuplas de 1, 2 ou 3 indices, variando de acordo com o tamanho do NDRange. Os indices desses IDs vão de $M$ até
+$M+\delta$, $\delta$ sendo o tamanho da dimensão que a tupla representa e $M$ o um valor inicial para os indices daquela dimensão definido
+na criação do NDRange pelo \textit{host}.
+
+Para controlar a execução de vários kernels ao mesmo tempo em \textit{devices} difenretes, o OpenCL define um \textbf{Context}.
+Um \textit{Context} é um conjunto de \textit{Devices}, \textit{Kernels}, \textit{Program Objects} e \textit{Memory Objects}.
+\textit{Devices} e \textit{Kernels} já foram explicados acima, e \textit{Memory Objects} serão explicados na subseção abaixo.
+\textit{Program Objects} são objetos que tem as seguintes informações:
+\begin{itemize}
+  \item O código fonte ou binário que será transformado enas funções de um ou mais kernels.
+  \item O número de kernels dentro desse binário ou fonte.
+  \item O log da compilação se o objeto tiver um código fonte.
+  \item Uma referência para o \textit{context} e os \textit{devices} que ele está associado.
+\end{itemize}
+
+Com um \textit{conext} criado e inicializado, o \textit{host} controla a execução dele usando um objeto chamado \textbf{Command-Queue}.
+O \textit{host} adiciona comando a uma \textit{command-queue} que está associada a um \textit{context}, e os comandos são executados
+dentro dos \textit{devices} do \textit{context}. Os comandos são divididos em 3 tipos:
+\begin{itemize}
+  \item Comandos de execução de kernel.
+  \item Comandos de transferência de memória
+  \item Comandos de sincronização
+\end{itemize}
+Esses comandos podem ser executados sequêncialmente, onde um comando na \textit{command-queue} espera todos os anteriores a ele executarem para
+executar, ou de forma não sequêncial, onde a \textit{command-queue} só define a ordem em que os comandos terão sua execução iniciada, mas não se 
+eles devem esperar um comando anterior para rodarem.
 
 \subsubsection{Modelo de Memória}
 As threads em execução num kernel tem acesso a 4 locais distintos de memória:
@@ -191,5 +255,39 @@ As threads em execução num kernel tem acesso a 4 locais distintos de memória:
   \item Memória Privada - Região privada de uma thread, somente ela tem acesso a está região.
 \end{enumerate}
 
-\subsubsection{Modelo de Execução}
+O \textit{host} tem acesso de escrita e leitura na memória global e constante. O kernel tem acesso de escrita e memória em todas as localidades, a menos da local, 
+onde ele só tem acesso de leitura. O OpenCL aplica uma consistência de meória relaxada, ou seja, não existem garantias que o estado de um bloco de memória 
+acessado por um work-item seja igual para qualquer outro work-item acessando aquele bloco. A única consistência de memória garantida pelo OpenCL é de que dentro 
+de uma barreira de um work-group, tanto a memória global quanto a local será igual para todos os work-itens dentro daquele work-group.
+
+A iteração entre o modelo de memória do \textit{host} e do \textit{device} é feita através de uma API que ou copia dados para a GPU ou faz um mapeamento de um setor
+da memória do \textit{host} para um setor da memória do \textit{device}. A passagem da memŕia é feita por uma \textit{Command-Queue}.
+A transferência de dados é feita através de um tipo básico de objetos do OpenCL, os 
+\textit{Memory Objects}. eles podem ser de 2 tipos:
+\begin{itemize}
+  \item Tipo \textit{buffer} - Representa tipos primitivos como \textbf{int} ou \textit{float}, vetores e estruturas definidas pelo usuário. Eles são
+    acessados pelo kernel através de um ponteiro, e são organizados de maneira sequêncial na memória. Não existe diferença entre o mêtodo de leitura ou escrita
+    de um \textit{buffer}.
+
+  \item Tipo \textit{image} - Representa um buffer (não o tipo acima, mas o conceito de buffer na computação) de uma imagem ou de uma textura. Existe uma diferença entre
+    os mêtodos de escrita e leitura de um \textit{image}. Para ler ou escrever é necessário usar funções próprias do OpenCL. As funções de leitura transformam o tipo
+    \textit{image} num vetor de 4 componentes, e as funções de escrita transformam vetores de 4 componentes em uma componente do tipo \textit{image}.
+\end{itemize}
+
 \subsubsection{Modelo de Programação}
+
+Existem 2 models de programação suportados pelo OpenCL:
+\begin{enumerate}
+  \item Modelo de Dados - Esse é o modelo mais comum usado pelo OpenCL, onde os indices do espaço de indices que cada work-item recebe 
+    definem um mapa one-to-one para os dados quie o kernel recebe do \textit{host}. No OpenCL esse modelo é relaxado, já que os
+    work-items podem estar associados a mais de um bloco de dados.
+  \item Modelo de Tarefas - Esse modelo supõem que somente um work-item será executado em cada device, e que o programador será o responsável
+    por paralelizar a aplicação usando ou vários kernels ou tipos vetoriais de dados que o \textit{device} implemente.
+\end{enumerate}
+
+Sobre a sincronização entre \textit{device} e \textit{host} no OpenCL, ela pode ser feita de 2 maneiras:
+\begin{enumerate}
+  \item Pela barreira implicita na execução sequêncial da \textit{command-queue}
+  \item Por eventos do OpenCL. Ao rodar um comando numa \textit{command-queue} é possível adicionar um objeto do OpenCL chamado de evento, e podemos esperar
+    esse evento ser concluído no \textit{host} para continuar a execução.
+\end{enumerate}
