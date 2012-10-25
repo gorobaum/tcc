@@ -1,0 +1,177 @@
+\documentclass[brazil]{beamer}
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usetheme{JuanLesPins}
+
+\title{Comparação de eficiência entre OpenCL e CUDA}
+\author{Thiago de Gouveia Nunes}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%-------------------------------------
+\section{Tecnologias}
+%-------------------------------------
+
+\frame{
+  \frametitle{GPGPU}
+  É usar uma GPU (Graphics Processing Unit), uma placa criada com foco em Computação Gráfica, 
+  para processamento de propósito geral. A arquitetura de uma GPU basicamente é uma região de memória global, um escalonador
+  de threads e vários processadores organizados em pequenos grupos. Ela executa usando o método \textbf{SIMD} 
+  (Single Instruction, Multiple Data), em que toda thread recebe a mesma instrução mas a executa em dados diferentes.
+  Isso faz com que uma GPU resolva problemas altamente paralelizáveis com poucos dados e muito processamento, 
+  como uma multiplicação de matrizes, mais rapidamente que CPUs multicore ou sistemas distribuídos.
+}
+
+\frame{
+  \frametitle{GPGPU}
+  Existem 2 linguagens fortes no mercado para GPGPU, o \textbf{CUDA} (Compute Unified Device Architecture) feita pela
+  \textit{NVIDIA}, e o \textbf{OpenCL} (Open Computing Language) feito pelo Khronos Group, o mesmo grupo responsável pelo
+  OpenGL. O objetivo do trabalho é comparar esses dois frameworks através de testes de desempenho e comparação nas abstrações
+  feitas para utilizar a GPU.
+}
+
+\frame{
+  \frametitle{OpenCL}
+  O OpenCL é uma linguagem de programação paralela para sistemas híbridos. Ele da suporte para sistemas baseados tanto em GPU, CPU ou
+  outros processadores. O OpenCL é open source e foi uma iniciativa da Apple, que depois sofreu melhorias feitas por times de várias 
+  empresas, dentre elas Intel, IBM e NVIDIA. OpenCL pode ser usado em conjunto tanto com C quanto com o C++.
+}
+
+\frame{
+  \frametitle{CUDA}
+  CUDA é uma linguagem para programação paralela em GPUs desenvolvida pela NVIDIA. Atualmente só existe 1 compilador
+  de CUDA para placas NVIDIA, o \textit{nvcc}. O CUDA é proprietário. Ela suporta C e C++ e existem wrappers para 
+  Java, Python e Fortran.
+}
+
+\frame{
+  \frametitle{GPU}
+  Antes de entrar na comparação entre as linguagens, vamos discutir sobre a GPU usada para os testes, uma GeForce GTX 460 SE.
+  % COLOCAR IMAGEM DA	 GEFORCE 460.
+}
+
+%-------------------------------------
+\section{Comparação entre as abstrações}
+%-------------------------------------
+
+\frame{
+  \frametitle{Termos Técnicos}
+  A explicação dos termos técnicos que serão usados:
+  \begin{itemize}
+    \item[Kernel] Função que será executada em cada processador da placa de vídeo.
+    \item[Host]   Programa que será executado na CPU e tem a função de preparar o ambiente para o kernel e iniciá-lo na GPU.
+    \item[SIMD]   \textit{Single Instrution, Multiple Data}. As GPU executam suas tarefas usando esse paradigma.
+    \item[Device]   Hardware onde os kernels serão executados, normalmente uma GPU ou CPU.
+  \end{itemize}
+}
+
+%-------------------------------------
+\subsection{OpenCL}
+%-------------------------------------
+
+\frame{
+  \frametitle{Modelos}
+  OpenCL usa uma hierarquia de 4 modelos:
+  \begin{enumerate}
+    \item Modelo de Plataforma
+    \item Modelo de Execução
+    \item Modelo de Memória
+    \item Modelo de Programação
+  \end{enumerate}
+}
+
+\frame{
+  \frametitle{Modelo de Plataforma}
+  O modelo de plataforma é responsável por representar o Host ligado a um ou mais Devices. \\
+  Cada device é subdividido em Compute Units, e cada Compute Unit é composta de vários Processing Elements. \\
+  São os Processing Elements os responsáveis pelo processamento no OpenCL. \\
+  Nas Compute Units o processamento das threads é síncrono, ou seja, todas as threads estão executando a mesma linha do código
+  ao mesmo tempo.
+}
+
+\frame{
+  \frametitle{Modelo de Execução}
+  O modelo de execução representa o programa que roda no Host, e todos os Kernel's. O host prepara um contexto para a execução do kernel e o roda. \\
+}
+  Quando o Kernel começa a executar, um espaço de indices é criado, onde cada indice representa uma cópia do kernel rodando. Esse espaço pode ter dimensão 1, 2 ou 3.
+
+\frame{
+  \frametitle{Contexto}
+  O contexto onde o kernel é executado tem os seguintes recursos:
+  \begin{itemize}
+    \item Devices
+    \item Kernels
+    \item Program Objects: O código fonte do kernel.
+    \item Memory Objects: Objetos que representão a memória que será modificada pelo kernel. Tanto o host como o kernel tem acesso a ela.
+    \item Command-Queue: Fila que cuida da ordem em que tudo será executado num device.
+  \end{itemize}
+}
+
+\frame{
+  \frametitle{Modelo de Memória}
+  Cada instância do kernel tem acesso a 4 tipos de memórias distintas:
+  \begin{enumerate}
+     \item Global Memory  - Toda e qualquer instância de um kernel tem acesso a essa memória.
+     \item Constat Memory - Memória que permanece fixa ao andar da execução.
+     \item Local Memory   - Região da memória dividida pelos kernel's de um mesmo CU.   
+     \item Private Memory - Região privada para cada instância de um kernel.
+   \end{enumerate} 
+}
+
+\frame{
+  \frametitle{Modelo de Programação}
+  O OpenCL suporpa dois modelos de programação, o Data Parallel e o Task Parallel.
+  \begin{enumerate}
+    \item Data Parallel - É o modelo padrão do OpenCL, cria várias instâncias iguais do kernel, cada uma recebendo argumentos diferentes.
+    \item Task Parallel - Nesse modelo, cada kernel tem só uma instância, e o programador tem que usar outros objetos ( Ex: vetores ) para expressar o paralelismo do kernel.
+  \end{enumerate}
+}
+
+%-------------------------------------
+\subsection{CUDA}
+%-------------------------------------
+
+\frame{
+  \frametitle{Plataforma}
+  O CUDA aceita somente um device ativo por vez.
+}
+
+%-------------------------------------
+\section{Comparação de Performance}
+%-------------------------------------
+
+\frame{
+  \frametitle{Ideia}
+  Para comparar a performance das duas linguagens foram usados dois tipos de kernel, um em que o desempenho está ligado ao acesso a
+  memória (memory bound) e outro que está ligado à velocidade de processamento (compute bound).
+}
+
+\frame{
+  \frametitle{Kernel Memory bound} 
+  Memory bound é um gargalo comum em GPGPU já que os dados vêm para a GPU através de um barramento PCI-Express, normalmente
+  utilizado por outras aplicações, criando um atraso no recebimento dos dados. Com os dados dentro da GPU, ainda temos o problema
+  de separar os dados entre os processadores da GPU e minimizar o número de conflitos de acesso de memória.
+  Para comparar a memória, foi usado um kernel que faz a cópia de uma matriz de floats para outras.
+} 
+
+\frame{
+  \frametitle{Kernel Memory bound}
+  
+}
+
+\frame{
+  \frametitle{Kernel Compute bound}
+  Minimizar o custo do processamento é importante em GPUs já que estamos rodando nossas aplicações em centenas de
+  processadores ao mesmo tempo, fazendo o impacto de uma pequena melhoria no tempo de execução uma centena de vezes maior.
+  Para comparar o processamento, usamos um kernel que multiplica duas matrizes de doubles e guarda o valor numa terceira.
+  Obtemos o tempo real do processamento tirando o tempo de execução do kernel memory bound do tempo desse kernel.
+}
+
+\frame{
+  \frametitle{Kernel Compute bound}
+  
+}
+
+\end{document}
