@@ -53,7 +53,7 @@
 }
 
 %-------------------------------------
-\section{Comparação entre as abstrações}
+\section{Comparação entre as linguagens}
 %-------------------------------------
 
 \frame{
@@ -61,25 +61,56 @@
   A explicação dos termos técnicos que serão usados:
   \begin{itemize}
     \item[Kernel] Função que será executada em cada processador da placa de vídeo.
-    \item[Host]   Programa que será executado na CPU e tem a função de preparar o ambiente para o kernel e iniciá-lo na GPU.
+    \item[Host]   Programa que tem a função de preparar o ambiente para o kernel e iniciá-lo na GPU.
     \item[SIMD]   \textit{Single Instrution, Multiple Data}. As GPU executam suas tarefas usando esse paradigma.
     \item[Device]   Hardware onde os kernels serão executados, normalmente uma GPU ou CPU.
   \end{itemize}
 }
 
-%-------------------------------------
-\subsection{OpenCL}
-%-------------------------------------
+\frame{
+  \frametitle{Semelhanças}
+  Alguns elementos são iguais para as duas linguagens.
+  \begin{itemize}
+    \item Para iniciar a execução num device, é necessario que um programa chamado de host inicie o ambiente de execução na GPU.
+    \item As threads executando no device são identificadas por indices. Esses indices podem ter até 3 dimensões.
+    \item As threads são agrupadas em conjuntos antes de serem enviadas para execução no device, e esses conjuntos são escalonados, 
+      não as threads. Esses conjuntos, assim como os indices, também podem ter até 3 dimensões.
+    \item A alocação e preenchimento da memória no device é controlada pelo host.
+    \item A execução dos kernels podem ser síncronas ou assíncronas com o a execução do host. É possível criar barreiras no host
+      que esperam algum evento no device.
+    \item As duas linguagens definem versões tanto para os hardwares como para as APIs que elas usam e essas versões definem
+      quais operações estão disponiveis naquele hardware ou API. Isso é importante pois cria uma retrocompatibilidade, já que
+      as placas da NVIDIA emulam funcionalidades que elas não tem, a custo de desempenho. 
+  \end{itemize}
+}
 
 \frame{
-  \frametitle{Modelos}
-  OpenCL usa uma hierarquia de 4 modelos:
-  \begin{enumerate}
-    \item Modelo de Plataforma
-    \item Modelo de Execução
-    \item Modelo de Memória
-    \item Modelo de Programação
-  \end{enumerate}
+  \frametitle{Diferenças}
+  No OpenCL, a inicialização de um device é de responsabilidade do programador. Ele deve criar uma plataforma (objeto que
+  representa um host e um ou mais devices), identificar os devices no computador e associá-los à plataforma, depois
+  criar um contexto relacionando o kernel a ser executado, os devices onde ele deve executar e uma fila de execução que será
+  usada para enviar dados do device para o host e vice versa. No CUDA, esse processo é feito por diretivas, que são usadas
+  para enviar e receber os dados do device e iniciar a execução do kernel. Toda a parte de identificar e iniciar um device
+  é feita em background pelo CUDA no inicio da execução do host, mas é possível escolher em qual device o kernel será
+  executado.
+}
+
+\frame{
+  \frametitle{Diferenças}
+  O modelo de execução as duas linguagens é bem parecido já que ele é limitado pela execução da GPU. Nas GPUs NVIDIA,
+  as threads são executadas em grupos de 8, chamados de \textit{warp}, e esses warps são agrupados em blocos, com no máximo
+  1024 threads. Os blocos são escalonados para execução nos SM. \\
+  Assim, as duas linguagens definem objetos parecidos com os blocos para organizarem as threads. No OpenCL, esse objeto
+  é chamado de \textit{work-group}, e no CUDA de \textit{block}.
+}
+
+\frame{
+  \frametitle{Diferenças}
+  O modelo de execução as duas linguagens é bem parecido já que ele é limitado pela execução da GPU. Nas GPUs NVIDIA,
+  as threads são executadas em grupos de 8, chamados de \textit{warp}, e esses warps são agrupados em blocos, com no máximo
+  1024 threads. Os blocos são escalonados para execução nos SM. \\
+  Assim, as duas linguagens definem objetos parecidos com os blocos para organizarem as threads. No OpenCL, esse objeto
+  é chamado de \textit{work-group}, e no CUDA de \textit{block}.
 }
 
 \frame{
@@ -87,15 +118,15 @@
   O modelo de plataforma é responsável por representar o Host ligado a um ou mais Devices. \\
   Cada device é subdividido em Compute Units, e cada Compute Unit é composta de vários Processing Elements. \\
   São os Processing Elements os responsáveis pelo processamento no OpenCL. \\
-  Nas Compute Units o processamento das threads é síncrono, ou seja, todas as threads estão executando a mesma linha do código
-  ao mesmo tempo.
 }
 
 \frame{
   \frametitle{Modelo de Execução}
-  O modelo de execução representa o programa que roda no Host, e todos os Kernel's. O host prepara um contexto para a execução do kernel e o roda. \\
+  O modelo de execução representa o programa que roda no Host, e todos os kernels em execução num dado momento. 
+  O host é responsável pela criação de um contexto, que será usado para troca de informações entre o host e o kernel. \\
+  Ao iniciar a execução do kernel, é necessário determinar um espaço de indices para as threads, esse espaço tem dimensões
+  variáveis de uma até três.
 }
-  Quando o Kernel começa a executar, um espaço de indices é criado, onde cada indice representa uma cópia do kernel rodando. Esse espaço pode ter dimensão 1, 2 ou 3.
 
 \frame{
   \frametitle{Contexto}
@@ -135,7 +166,11 @@
 
 \frame{
   \frametitle{Plataforma}
-  O CUDA aceita somente um device ativo por vez.
+  Toda a configuração para iniciar a transferência de dados entre o \textit{host} e o \textit{device} é feita pela primeira
+  chamada a qualquer diretiva do CUDA. \\
+  O modelo de plataforma do CUDA limita a um o número de devices ativos por vez. \\
+  
+  
 }
 
 %-------------------------------------

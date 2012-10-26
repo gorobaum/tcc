@@ -19,7 +19,7 @@ compartilham uma região de memória compartilhada e um conjunto de processadore
 rasterizações ou funções geeométricas. 
 
 Os blocos são agrupados em um conjunto maior que determina o número total de threads por kernel sendo executado. 
-No OpenCL, esse conjunto se chama \textit{NRange} e no CUDA \textit{Grid}. O OpenCL cria um NDRange por execução do kernel
+No OpenCL, esse conjunto se chama \textit{NDRange} e no CUDA \textit{Grid}. O OpenCL cria um NDRange por execução do kernel
 e as dimensões do NDRange e dos work-groups dentro dele são iguais. O espaço de indices das threads de um NDRange pode começar 
 tanto de zero quanto de um número definido pelo usuário, facilitanto operações em posições de memória deslocadas dentro 
 do espaço de memória do problema.

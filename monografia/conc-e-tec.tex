@@ -25,8 +25,10 @@ executadas nos streaming multiprocessors (SM). Os SM são conjuntos de 48 proces
 um cache de instruções e 8 unidades de funções especiais. A Geforce GTX 460 tem 7 SMs, totalizando 336 processadores.
 
 O código que será executado em cada processador é chamado de \textbf{kernel}. Então, ao executar um kernel na GPU, o 
-hardware criará threads, cada uma executando esse mesmo kernel mas com dados diferentes, e cada thread será escalonada 
-para um processador diferente. Como as threads são distribuidas pelos SMs varia com a linguagem usada para se comunicar com a GPU.
+hardware criará threads, cada uma executando esse mesmo kernel mas com dados diferentes. Nas placas NVIDIA as threads 
+são agrupadas em blocos, e esses blocos são escalonados para cada SM. Depois, todas as threads dentro de um bloco são 
+escalonadas por grupos de 8, esses grupos chamados de \textbf{warp}, e cada warp é executado paralelamente dentro do 
+mesmo SM para qual o bloco foi escalonado.
 
 Outra parte importante do hardware é a memória. A memória na GPU é limitada em relação à da CPU. GPUs tem, em média, 1GB
 de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia de dados da memória principal do computador para a memória 
@@ -220,7 +222,7 @@ work-group. Esses IDs são tuplas de 1, 2 ou 3 indices, variando de acordo com o
 $M+\delta$, $\delta$ sendo o tamanho da dimensão que a tupla representa e $M$ o um valor inicial para os indices daquela dimensão definido
 na criação do NDRange pelo \textit{host}.
 
-Para controlar a execução de vários kernels ao mesmo tempo em \textit{devices} difenretes, o OpenCL define um \textbf{Context}.
+Para controlar a execução de vários kernels ao mesmo tempo em \textit{devices} diferentes, o OpenCL define um \textbf{Context}.
 Um \textit{Context} é um conjunto de \textit{Devices}, \textit{Kernels}, \textit{Program Objects} e \textit{Memory Objects}.
 \textit{Devices} e \textit{Kernels} já foram explicados acima, e \textit{Memory Objects} serão explicados na subseção abaixo.
 \textit{Program Objects} são objetos que tem as seguintes informações:
