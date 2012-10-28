@@ -76,6 +76,12 @@
     \item As threads são agrupadas em conjuntos antes de serem enviadas para execução no device, e esses conjuntos são escalonados, 
       não as threads. Esses conjuntos, assim como os indices, também podem ter até 3 dimensões.
     \item A alocação e preenchimento da memória no device é controlada pelo host.
+  \end{itemize}
+}
+
+\frame{
+  \frametitle{Semelhanças}
+  \begin{itemize}
     \item A execução dos kernels podem ser síncronas ou assíncronas com o a execução do host. É possível criar barreiras no host
       que esperam algum evento no device.
     \item As duas linguagens definem versões tanto para os hardwares como para as APIs que elas usam e essas versões definem
@@ -85,7 +91,20 @@
 }
 
 \frame{
-  \frametitle{Diferenças}
+  \frametitle{Semelhanças}
+  \begin{itemize}
+      \item Existem 4 locais diferentes para a memória que é enviada para o device:
+        \begin{enumerate}
+         \item Global Memory  - Toda e qualquer thread tem acesso a essa memória.
+         \item Constat Memory - Memória que permanece fixa ao andar da execução.
+         \item Local Memory   - Região da memória dividida pelas threads de um mesmo SM.   
+         \item Private Memory - Região privada para cada thread.
+       \end{enumerate} 
+  \end{itemize}
+}
+
+\frame{
+  \frametitle{Diferenças - Plataforma}
   No OpenCL, a inicialização de um device é de responsabilidade do programador. Ele deve criar uma plataforma (objeto que
   representa um host e um ou mais devices), identificar os devices no computador e associá-los à plataforma, depois
   criar um contexto relacionando o kernel a ser executado, os devices onde ele deve executar e uma fila de execução que será
@@ -96,7 +115,18 @@
 }
 
 \frame{
-  \frametitle{Diferenças}
+  \frametitle{Diferenças - Plataforma}
+  No OpenCL existem 2 tipos de execução diferentes:
+  \begin{enumerate}
+    \item Data Parallel - É o modelo padrão do OpenCL, cria várias instâncias iguais do kernel, cada uma recebendo argumentos diferentes.
+    \item Task Parallel - Nesse modelo, cada kernel tem só uma instância, e o programador tem que usar outros objetos 
+      para expressar o paralelismo do kernel. Um exemplo de como o programador pode fazer isso é utilizar os tipo
+      vetoriais implementados no device ou executar várias tasks assíncronamente no device.
+  \end{enumerate}
+}
+
+\frame{
+  \frametitle{Diferenças - Execução}
   O modelo de execução as duas linguagens é bem parecido já que ele é limitado pela execução da GPU. Nas GPUs NVIDIA,
   as threads são executadas em grupos de 8, chamados de \textit{warp}, e esses warps são agrupados em blocos, com no máximo
   1024 threads. Os blocos são escalonados para execução nos SM. \\
@@ -105,12 +135,10 @@
 }
 
 \frame{
-  \frametitle{Diferenças}
-  O modelo de execução as duas linguagens é bem parecido já que ele é limitado pela execução da GPU. Nas GPUs NVIDIA,
-  as threads são executadas em grupos de 8, chamados de \textit{warp}, e esses warps são agrupados em blocos, com no máximo
-  1024 threads. Os blocos são escalonados para execução nos SM. \\
-  Assim, as duas linguagens definem objetos parecidos com os blocos para organizarem as threads. No OpenCL, esse objeto
-  é chamado de \textit{work-group}, e no CUDA de \textit{block}.
+  \frametitle{Diferenças - Memória}
+  O OpenCL cria um objeto chamado Memory Object para abstrair uma posição na memória do device. Já o CUDA usa ponteiros do C
+  para referenciar posições de memória no kernel. Nas duas linguagens é necessário usar funções para iniciar e alocar o espaço
+  na memoria do device e para passar a memória para essas posições. No CUDA ainda é necessário desalocar essas posições.
 }
 
 \frame{
@@ -128,51 +156,6 @@
   variáveis de uma até três.
 }
 
-\frame{
-  \frametitle{Contexto}
-  O contexto onde o kernel é executado tem os seguintes recursos:
-  \begin{itemize}
-    \item Devices
-    \item Kernels
-    \item Program Objects: O código fonte do kernel.
-    \item Memory Objects: Objetos que representão a memória que será modificada pelo kernel. Tanto o host como o kernel tem acesso a ela.
-    \item Command-Queue: Fila que cuida da ordem em que tudo será executado num device.
-  \end{itemize}
-}
-
-\frame{
-  \frametitle{Modelo de Memória}
-  Cada instância do kernel tem acesso a 4 tipos de memórias distintas:
-  \begin{enumerate}
-     \item Global Memory  - Toda e qualquer instância de um kernel tem acesso a essa memória.
-     \item Constat Memory - Memória que permanece fixa ao andar da execução.
-     \item Local Memory   - Região da memória dividida pelos kernel's de um mesmo CU.   
-     \item Private Memory - Região privada para cada instância de um kernel.
-   \end{enumerate} 
-}
-
-\frame{
-  \frametitle{Modelo de Programação}
-  O OpenCL suporpa dois modelos de programação, o Data Parallel e o Task Parallel.
-  \begin{enumerate}
-    \item Data Parallel - É o modelo padrão do OpenCL, cria várias instâncias iguais do kernel, cada uma recebendo argumentos diferentes.
-    \item Task Parallel - Nesse modelo, cada kernel tem só uma instância, e o programador tem que usar outros objetos ( Ex: vetores ) para expressar o paralelismo do kernel.
-  \end{enumerate}
-}
-
-%-------------------------------------
-\subsection{CUDA}
-%-------------------------------------
-
-\frame{
-  \frametitle{Plataforma}
-  Toda a configuração para iniciar a transferência de dados entre o \textit{host} e o \textit{device} é feita pela primeira
-  chamada a qualquer diretiva do CUDA. \\
-  O modelo de plataforma do CUDA limita a um o número de devices ativos por vez. \\
-  
-  
-}
-
 %-------------------------------------
 \section{Comparação de Performance}
 %-------------------------------------
@@ -187,7 +170,7 @@
   \frametitle{Kernel Memory bound} 
   Memory bound é um gargalo comum em GPGPU já que os dados vêm para a GPU através de um barramento PCI-Express, normalmente
   utilizado por outras aplicações, criando um atraso no recebimento dos dados. Com os dados dentro da GPU, ainda temos o problema
-  de separar os dados entre os processadores da GPU e minimizar o número de conflitos de acesso de memória.
+  de escalonar o acesso à memória a vários SM diferentes.
   Para comparar a memória, foi usado um kernel que faz a cópia de uma matriz de floats para outras.
 } 
 
@@ -208,5 +191,11 @@
   \frametitle{Kernel Compute bound}
   
 }
+
+\frame{Estatisticas}
+
+\frame{Explicação dos PTX}
+
+\frame{Comparação dos PTX}
 
 \end{document}

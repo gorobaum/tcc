@@ -30,11 +30,13 @@ de um kernel é representada por um único grid.
 \\
 
 Sobre a memória, as duas linguagens deixam a criação e alocação da memória para o \textit{host}. Cada uma delas define uma maneira
-diferente de tratar a memória, no CUDA a memória é tratada de maneira semelhante ao C. Por exemplo, para alocar um vetor de inteiros
-primeiro devemos declarar um ponteiro para inteiro como no C, e depois alocar o tamanho dele dentro da GPU e copiar os dados da 
-memória do \textit{host} para a memória do \textit{device} usando diretivas do CUDA. O OpenCL cria objetos de memória que serão
+diferente de tratar a memória, no CUDA a memória do device é tratada como um simples ponteiro. 
+O OpenCL cria objetos de memória que serão
 mapeados para a memória do \textit{device}. As operações de leitura e escrita nesses objetos são feitos através de uma fila de 
-execução.
+execução e de diretivas auxiliares para a inicialização e alocação.
+
+A memória pode ser direcionada para qualquer um dos 4 espaços do device, usando modificadores especiais na declaração da variável
+dentro do kernel.
 \subsection{Comparação de eficiencia}
 \subsubsection{Como fazer a comparação?}
 \subsubsection{Montagem dos kernels}
