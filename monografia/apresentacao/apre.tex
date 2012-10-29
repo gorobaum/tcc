@@ -131,29 +131,7 @@
   as threads são executadas em grupos de 8, chamados de \textit{warp}, e esses warps são agrupados em blocos, com no máximo
   1024 threads. Os blocos são escalonados para execução nos SM. \\
   Assim, as duas linguagens definem objetos parecidos com os blocos para organizarem as threads. No OpenCL, esse objeto
-  é chamado de \textit{work-group}, e no CUDA de \textit{block}.
-}
-
-\frame{
-  \frametitle{Diferenças - Memória}
-  O OpenCL cria um objeto chamado Memory Object para abstrair uma posição na memória do device. Já o CUDA usa ponteiros do C
-  para referenciar posições de memória no kernel. Nas duas linguagens é necessário usar funções para iniciar e alocar o espaço
-  na memoria do device e para passar a memória para essas posições. No CUDA ainda é necessário desalocar essas posições.
-}
-
-\frame{
-  \frametitle{Modelo de Plataforma}
-  O modelo de plataforma é responsável por representar o Host ligado a um ou mais Devices. \\
-  Cada device é subdividido em Compute Units, e cada Compute Unit é composta de vários Processing Elements. \\
-  São os Processing Elements os responsáveis pelo processamento no OpenCL. \\
-}
-
-\frame{
-  \frametitle{Modelo de Execução}
-  O modelo de execução representa o programa que roda no Host, e todos os kernels em execução num dado momento. 
-  O host é responsável pela criação de um contexto, que será usado para troca de informações entre o host e o kernel. \\
-  Ao iniciar a execução do kernel, é necessário determinar um espaço de indices para as threads, esse espaço tem dimensões
-  variáveis de uma até três.
+  é chamado de \textit{work-group}, e no CUDA de \textit{block}. 
 }
 
 %-------------------------------------
@@ -174,10 +152,11 @@
   Para comparar a memória, foi usado um kernel que faz a cópia de uma matriz de floats para outras.
 } 
 
-\frame{
+
+\begin{frame}[fragile]
   \frametitle{Kernel Memory bound}
-  
-}
+
+\end{frame}
 
 \frame{
   \frametitle{Kernel Compute bound}
@@ -187,15 +166,38 @@
   Obtemos o tempo real do processamento tirando o tempo de execução do kernel memory bound do tempo desse kernel.
 }
 
-\frame{
+\begin{frame}[fragile]
   \frametitle{Kernel Compute bound}
-  
-}
+
+\end{frame}
 
 \frame{Estatisticas}
 
-\frame{Explicação dos PTX}
+\frame{
+  \frametitle{Explicação dos PTX}
+  Para melhorar a compatibilidade dos programas rodando em GPUs diferentes, a NVIDIA implementou uma máquina virtual, a Parallel Thread Execution (PTX). 
+  Antes de ter seu binário compilado, todo kernel, independende da linguagem, é précompilado para um arquivo .ptx que será executado na máquina virtual. 
+  Observando os arquivos PTX resultantes da compilação é possível identificar qual a diferença para a GPU das abstrações das linguagens e quais os impactos 
+  disso no desempenho dos programas.
+}
 
-\frame{Comparação dos PTX}
+\begin{frame}[fragile]
+  \frametitle{Comparação dos PTX}
+  Pelos .ptx é possível verificar algumas das diferenças entre as abstrações das linguagens:
+  \begin{enumerate}
+    \item Ao calcular o indice global de uma thread, o OpenCL usa um registrador a mais, que é usado para identificar o kernel que a thread faz parte. O CUDA não
+      precisa dessa informação a mais pois só é possivel rodar um kernel por aplicação por vez.
+    \item O OpenCL faz mais leituras da memória padrão que o CUDA. Isso é visivel nos .ptx dos kernels process bound. A cada iteração do loop o OpenCL
+      carrega todos os paramêtros para seus registradores, enquanto o CUDA carrega somente um paramêtro, o necessário para validar o próximo passo do loop.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Comparação dos PTX}
+  Pelos resultados dos .ptx, o compilador para PTX do CUDA é mais otimizado que o do OpenCL. Ao acessar uma posição de memória dentro de um loop, o compilador
+  do CUDA faz todos os cálculos que não serão afetados pelos passos do loop fora dele, e usa esses valores em conjunto com o passo do loop para determinar a
+  posição que deve ser lida da memória global. Já o OpenCL lê a cada passo esses valores constantes da memória global, aumentando o tempo de execução com
+  leituras custosas à memória.
+\end{frame}
 
 \end{document}
