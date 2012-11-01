@@ -1,12 +1,23 @@
 \documentclass[brazil]{beamer}
 \usepackage[brazilian]{babel}
 \usepackage[utf8]{inputenc}
-\usetheme{JuanLesPins}
+\usepackage{graphics}
+\usepackage{listings}
+\usetheme{Szeged}
+\usecolortheme{whale}
 
 \title{Comparação de eficiência entre OpenCL e CUDA}
 \author{Thiago de Gouveia Nunes}
 
 \begin{document}
+
+\lstset{
+basicstyle=\small,
+identifierstyle=, 
+stringstyle=\ttfamily,
+showstringspaces=false,
+language=c,
+keywordstyle=\color{blue}}
 
 \frame{\titlepage}
 
@@ -17,11 +28,7 @@
 \frame{
   \frametitle{GPGPU}
   É usar uma GPU (Graphics Processing Unit), uma placa criada com foco em Computação Gráfica, 
-  para processamento de propósito geral. A arquitetura de uma GPU basicamente é uma região de memória global, um escalonador
-  de threads e vários processadores organizados em pequenos grupos. Ela executa usando o método \textbf{SIMD} 
-  (Single Instruction, Multiple Data), em que toda thread recebe a mesma instrução mas a executa em dados diferentes.
-  Isso faz com que uma GPU resolva problemas altamente paralelizáveis com poucos dados e muito processamento, 
-  como uma multiplicação de matrizes, mais rapidamente que CPUs multicore ou sistemas distribuídos.
+  para processamento de propósito geral.
 }
 
 \frame{
@@ -34,23 +41,55 @@
 
 \frame{
   \frametitle{OpenCL}
-  O OpenCL é uma linguagem de programação paralela para sistemas híbridos. Ele da suporte para sistemas baseados tanto em GPU, CPU ou
-  outros processadores. O OpenCL é open source e foi uma iniciativa da Apple, que depois sofreu melhorias feitas por times de várias 
-  empresas, dentre elas Intel, IBM e NVIDIA. OpenCL pode ser usado em conjunto tanto com C quanto com o C++.
+    \begin{columns}
+      \begin{column}{.5\textwidth}
+        \includegraphics[scale=0.7]{OpenCL_Logo.png}
+      \end{column}
+      \begin{column}{.5\textwidth}
+         O OpenCL é uma linguagem de programação paralela para sistemas híbridos. O OpenCL iniciativa open source da Apple.
+          Hoje ela é mantida pelo grupo Khronos.
+      \end{column}
+    \end{columns}
 }
 
 \frame{
   \frametitle{CUDA}
-  CUDA é uma linguagem para programação paralela em GPUs desenvolvida pela NVIDIA. Atualmente só existe 1 compilador
-  de CUDA para placas NVIDIA, o \textit{nvcc}. O CUDA é proprietário. Ela suporta C e C++ e existem wrappers para 
-  Java, Python e Fortran.
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \includegraphics[scale=0.3]{CUDAlogo.jpg}
+    \end{column}
+    \begin{column}{.5\textwidth}
+      CUDA é uma linguagem proprietária para programação paralela em GPUs desenvolvida pela NVIDIA. 
+      Atualmente só existe 1 compilador de CUDA para placas NVIDIA, o \textit{nvcc}.
+    \end{column}
+  \end{columns}
+  
 }
 
 \frame{
   \frametitle{GPU}
-  Antes de entrar na comparação entre as linguagens, vamos discutir sobre a GPU usada para os testes, uma GeForce GTX 460 SE.
-  % COLOCAR IMAGEM DA	 GEFORCE 460.
+  \begin{columns}
+    \begin{column}{.6\textwidth}
+  \includegraphics[scale=0.28]{15596_large_GTX460_Architecture.jpg}  
+    \end{column}
+    \begin{column}{.4\textwidth}
+  Antes de entrar na comparação entre as linguagens, vamos discutir sobre a arquitetura da GPU usada para os testes, 
+  uma GeForce GTX 460 SE.
+    \end{column}
+  \end{columns}
 }
+
+\begin{frame}[fragile]
+  \frametitle{Arquitetura GeForce GTX 460 SE}
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \includegraphics[scale=0.35]{embed-arch2.jpg}  
+    \end{column}
+    \begin{column}{.5\textwidth}
+      A GPU é subdividida em vários Streaming Multiprocessor, como o do lado, que agrupam 48 processadores.
+    \end{column}
+  \end{columns}
+\end{frame}
 
 %-------------------------------------
 \section{Comparação entre as linguagens}
@@ -71,10 +110,9 @@
   \frametitle{Semelhanças}
   Alguns elementos são iguais para as duas linguagens.
   \begin{itemize}
-    \item Para iniciar a execução num device, é necessario que um programa chamado de host inicie o ambiente de execução na GPU.
-    \item As threads executando no device são identificadas por indices. Esses indices podem ter até 3 dimensões.
-    \item As threads são agrupadas em conjuntos antes de serem enviadas para execução no device, e esses conjuntos são escalonados, 
-      não as threads. Esses conjuntos, assim como os indices, também podem ter até 3 dimensões.
+    \item Para iniciar a execução num device é necessario que um programa chamado de host inicie o ambiente de execução na GPU.
+    \item As threads executando no device são identificadas por indices.
+    \item As threads são agrupadas em conjuntos antes de serem enviadas para execução no device.
     \item A alocação e preenchimento da memória no device é controlada pelo host.
   \end{itemize}
 }
@@ -82,11 +120,8 @@
 \frame{
   \frametitle{Semelhanças}
   \begin{itemize}
-    \item A execução dos kernels podem ser síncronas ou assíncronas com o a execução do host. É possível criar barreiras no host
-      que esperam algum evento no device.
-    \item As duas linguagens definem versões tanto para os hardwares como para as APIs que elas usam e essas versões definem
-      quais operações estão disponiveis naquele hardware ou API. Isso é importante pois cria uma retrocompatibilidade, já que
-      as placas da NVIDIA emulam funcionalidades que elas não tem, a custo de desempenho. 
+    \item A execução dos kernels podem ser síncronas ou assíncronas com o a execução do host.
+    \item As duas linguagens definem versões tanto para os hardwares como para as APIs que elas usam.
   \end{itemize}
 }
 
@@ -105,33 +140,27 @@
 
 \frame{
   \frametitle{Diferenças - Plataforma}
-  No OpenCL, a inicialização de um device é de responsabilidade do programador. Ele deve criar uma plataforma (objeto que
-  representa um host e um ou mais devices), identificar os devices no computador e associá-los à plataforma, depois
-  criar um contexto relacionando o kernel a ser executado, os devices onde ele deve executar e uma fila de execução que será
-  usada para enviar dados do device para o host e vice versa. No CUDA, esse processo é feito por diretivas, que são usadas
-  para enviar e receber os dados do device e iniciar a execução do kernel. Toda a parte de identificar e iniciar um device
-  é feita em background pelo CUDA no inicio da execução do host, mas é possível escolher em qual device o kernel será
-  executado.
+  No OpenCL, a inicialização de um device é de responsabilidade do programador.\\
+  No CUDA, esse processo é feito por diretivas.
 }
 
 \frame{
   \frametitle{Diferenças - Plataforma}
   No OpenCL existem 2 tipos de execução diferentes:
   \begin{enumerate}
-    \item Data Parallel - É o modelo padrão do OpenCL, cria várias instâncias iguais do kernel, cada uma recebendo argumentos diferentes.
-    \item Task Parallel - Nesse modelo, cada kernel tem só uma instância, e o programador tem que usar outros objetos 
-      para expressar o paralelismo do kernel. Um exemplo de como o programador pode fazer isso é utilizar os tipo
-      vetoriais implementados no device ou executar várias tasks assíncronamente no device.
+    \item Data Parallel
+    \item Task Parallel
   \end{enumerate}
+  O CUDA implementa o modelo SIMT (\textit{Single Instruction, Multiple Thread}).
 }
 
 \frame{
   \frametitle{Diferenças - Execução}
-  O modelo de execução as duas linguagens é bem parecido já que ele é limitado pela execução da GPU. Nas GPUs NVIDIA,
-  as threads são executadas em grupos de 8, chamados de \textit{warp}, e esses warps são agrupados em blocos, com no máximo
-  1024 threads. Os blocos são escalonados para execução nos SM. \\
-  Assim, as duas linguagens definem objetos parecidos com os blocos para organizarem as threads. No OpenCL, esse objeto
-  é chamado de \textit{work-group}, e no CUDA de \textit{block}. 
+  \begin{itemize}
+    \item Parecido entre elas, já que está ligado ao hardware da GPU.
+    \item Threads são separadas em blocos.
+    \item Os blocos são escalonados para execução nos \textbf{SM}.
+  \end{itemize}
 }
 
 %-------------------------------------
@@ -146,58 +175,118 @@
 
 \frame{
   \frametitle{Kernel Memory bound} 
-  Memory bound é um gargalo comum em GPGPU já que os dados vêm para a GPU através de um barramento PCI-Express, normalmente
-  utilizado por outras aplicações, criando um atraso no recebimento dos dados. Com os dados dentro da GPU, ainda temos o problema
-  de escalonar o acesso à memória a vários SM diferentes.
-  Para comparar a memória, foi usado um kernel que faz a cópia de uma matriz de floats para outras.
+  Para comparar o acesso a memória, foi usado um kernel que faz a cópia de uma matriz de floats para outras.
 } 
 
-
 \begin{frame}[fragile]
-  \frametitle{Kernel Memory bound}
-
+  \frametitle{Kernel Memory Bound}
+  \begin{lstlisting}
+    __kernel void matrixmulti(__global float* a, 
+          __global float* b, 
+          __global int* rowSize, 
+          __global int* columnSize) {
+          
+      unsigned int row = get_global_id(0);
+      unsigned int column = get_global_id(1);
+      
+      b[row+column*(*rowSize)] 
+          = a[row+column*(*rowSize)];
+    }
+  \end{lstlisting}
 \end{frame}
 
 \frame{
   \frametitle{Kernel Compute bound}
-  Minimizar o custo do processamento é importante em GPUs já que estamos rodando nossas aplicações em centenas de
-  processadores ao mesmo tempo, fazendo o impacto de uma pequena melhoria no tempo de execução uma centena de vezes maior.
-  Para comparar o processamento, usamos um kernel que multiplica duas matrizes de doubles e guarda o valor numa terceira.
-  Obtemos o tempo real do processamento tirando o tempo de execução do kernel memory bound do tempo desse kernel.
+  Para comparar o processamento, um kernel que multiplica duas matrizes de doubles e guarda o valor numa terceira fui usado.
 }
 
 \begin{frame}[fragile]
   \frametitle{Kernel Compute bound}
-
+  \begin{lstlisting}
+    __kernel void matrixmulti(__global int* a, 
+                              __global int* b, 
+                              __global int* c, 
+                              __global int* size) {
+        unsigned row = get_global_id(0);
+        unsigned column = get_global_id(1);
+        unsigned i;
+        
+        row *= (*size);
+        c[row+column] = 0;
+        for( i = 0; i < (*size); i++ ) 
+            c[row+column] += 
+                a[row+i]*b[i*(*size)+column];
+    }
+  \end{lstlisting}
 \end{frame}
 
-\frame{Estatisticas}
+\begin{frame}[fragile]
+  \frametitle{Estatistica Memory bound}
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+          \includegraphics[scale=0.15]{resultados_cuda_memory_histo.jpg} \\
+          CUDA
+    \end{column}
+    \begin{column}{.5\textwidth}
+          \includegraphics[scale=0.15]{resultados_opencl_memory_histo.jpg} \\
+          OpenCL
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Estatistica Process bound}
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \begin{figure}
+          \includegraphics[scale=0.15]{resultados_cuda_process_histo.jpg} \\
+          CUDA        
+      \end{figure}
+    \end{column}
+    \begin{column}{.5\textwidth}
+      \begin{figure}
+          \includegraphics[scale=0.15]{resultados_opencl_process_histo.jpg} \\
+          OpenCL
+      \end{figure}
+    \end{column}
+  \end{columns}
+\end{frame}
 
 \frame{
   \frametitle{Explicação dos PTX}
-  Para melhorar a compatibilidade dos programas rodando em GPUs diferentes, a NVIDIA implementou uma máquina virtual, a Parallel Thread Execution (PTX). 
-  Antes de ter seu binário compilado, todo kernel, independende da linguagem, é précompilado para um arquivo .ptx que será executado na máquina virtual. 
-  Observando os arquivos PTX resultantes da compilação é possível identificar qual a diferença para a GPU das abstrações das linguagens e quais os impactos 
-  disso no desempenho dos programas.
+  Para melhorar a compatibilidade dos programas rodando em GPUs diferentes, 
+  a NVIDIA implementou uma máquina virtual, a Parallel Thread Execution (PTX). 
 }
+
+\begin{frame}[fragile]
+  \frametitle{Arquivo .ptx}
+  Exemplo de um arquivo .ptx:
+  \begin{lstlisting}
+  mov.u32 	%r2, %ntid.x;
+	  mov.u32 	%r3, %ctaid.x;
+	  mov.u32 	%r4, %tid.x;
+	  mad.lo.s32 	%r10, %r2, %r3, %r4;
+	  
+	  mov.u32 	%r5, %ntid.y;
+	  mov.u32 	%r6, %ctaid.y;
+	  mov.u32 	%r7, %tid.y;
+	  mad.lo.s32 	%r11, %r5, %r6, %r7;
+  \end{lstlisting}
+\end{frame}
 
 \begin{frame}[fragile]
   \frametitle{Comparação dos PTX}
   Pelos .ptx é possível verificar algumas das diferenças entre as abstrações das linguagens:
   \begin{enumerate}
-    \item Ao calcular o indice global de uma thread, o OpenCL usa um registrador a mais, que é usado para identificar o kernel que a thread faz parte. O CUDA não
-      precisa dessa informação a mais pois só é possivel rodar um kernel por aplicação por vez.
-    \item O OpenCL faz mais leituras da memória padrão que o CUDA. Isso é visivel nos .ptx dos kernels process bound. A cada iteração do loop o OpenCL
-      carrega todos os paramêtros para seus registradores, enquanto o CUDA carrega somente um paramêtro, o necessário para validar o próximo passo do loop.
+    \item O OpenCL usa um registrador a mais que o CUDA para calcular o indice de uma thread.
+    \item O OpenCL faz mais leituras da memória padrão que o CUDA. 
   \end{enumerate}
 \end{frame}
 
 \begin{frame}
   \frametitle{Comparação dos PTX}
-  Pelos resultados dos .ptx, o compilador para PTX do CUDA é mais otimizado que o do OpenCL. Ao acessar uma posição de memória dentro de um loop, o compilador
-  do CUDA faz todos os cálculos que não serão afetados pelos passos do loop fora dele, e usa esses valores em conjunto com o passo do loop para determinar a
-  posição que deve ser lida da memória global. Já o OpenCL lê a cada passo esses valores constantes da memória global, aumentando o tempo de execução com
-  leituras custosas à memória.
+  Pelos resultados dos .ptx, é evidente que o compilador para PTX do CUDA é mais otimizado que o do OpenCL. \\
 \end{frame}
+
 
 \end{document}
