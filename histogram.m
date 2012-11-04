@@ -10,5 +10,5 @@ function histogram(filename, titulo)
 	ylabel("Quantidade de Threads");
 	das = substr(filename, 1, length(filename)-4);
 	oi = strcat(das,"_histo.jpg");
-	print -F:45 -djpeg -r80 oi;
+	print -F:45 -djpeg -oi r80;
 
