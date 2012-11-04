@@ -47,7 +47,6 @@ keywordstyle=\color{blue}}
       \end{column}
       \begin{column}{.5\textwidth}
          O OpenCL é uma linguagem de programação paralela para sistemas híbridos. O OpenCL iniciativa open source da Apple.
-          Hoje ela é mantida pelo grupo Khronos.
       \end{column}
     \end{columns}
 }
@@ -66,6 +65,16 @@ keywordstyle=\color{blue}}
   
 }
 
+\begin{frame}[fragile]
+  \frametitle{Como comparar?}
+  Bem, para comparar as linguagens, vamos observar 2 aspectos delas:
+  \begin{enumerate}
+    \item Acesso a memória;
+    \item Mêtodo de execução.
+  \end{enumerate}
+  Para entender o impacto desses aspectos no tempo de execução, vamos dar uma olhada no hardware de uma GPU...
+\end{frame}
+
 \frame{
   \frametitle{GPU}
   \begin{columns}
@@ -73,8 +82,7 @@ keywordstyle=\color{blue}}
   \includegraphics[scale=0.28]{15596_large_GTX460_Architecture.jpg}  
     \end{column}
     \begin{column}{.4\textwidth}
-  Antes de entrar na comparação entre as linguagens, vamos discutir sobre a arquitetura da GPU usada para os testes, 
-  uma GeForce GTX 460 SE.
+      Representação do hardware de uma GTX 460 SE da NVIDIA.
     \end{column}
   \end{columns}
 }
