@@ -27,16 +27,13 @@ keywordstyle=\color{blue}}
 
 \frame{
   \frametitle{GPGPU}
-  É usar uma GPU (Graphics Processing Unit), uma placa criada com foco em Computação Gráfica, 
-  para processamento de propósito geral.
+  O que é GPGPU?
 }
 
 \frame{
   \frametitle{GPGPU}
-  Existem 2 linguagens fortes no mercado para GPGPU, o \textbf{CUDA} (Compute Unified Device Architecture) feita pela
-  \textit{NVIDIA}, e o \textbf{OpenCL} (Open Computing Language) feito pelo Khronos Group, o mesmo grupo responsável pelo
-  OpenGL. O objetivo do trabalho é comparar esses dois frameworks através de testes de desempenho e comparação nas abstrações
-  feitas para utilizar a GPU.
+  Existem 2 linguagens populares no mercado para GPGPU, o \textbf{CUDA} (Compute Unified Device Architecture) feita pela
+  \textit{NVIDIA}, e o \textbf{OpenCL} (Open Computing Language), iniciativa open source de um conjunto de empresas.
 }
 
 \frame{
@@ -46,7 +43,7 @@ keywordstyle=\color{blue}}
         \includegraphics[scale=0.7]{OpenCL_Logo.png}
       \end{column}
       \begin{column}{.5\textwidth}
-         O OpenCL é uma linguagem de programação paralela para sistemas híbridos. O OpenCL iniciativa open source da Apple.
+         O OpenCL é uma linguagem de programação paralela para sistemas híbridos.
       \end{column}
     \end{columns}
 }
@@ -59,7 +56,6 @@ keywordstyle=\color{blue}}
     \end{column}
     \begin{column}{.5\textwidth}
       CUDA é uma linguagem proprietária para programação paralela em GPUs desenvolvida pela NVIDIA. 
-      Atualmente só existe 1 compilador de CUDA para placas NVIDIA, o \textit{nvcc}.
     \end{column}
   \end{columns}
   
@@ -69,7 +65,7 @@ keywordstyle=\color{blue}}
   \frametitle{Como comparar?}
   Bem, para comparar as linguagens, vamos observar 2 aspectos delas:
   \begin{enumerate}
-    \item Acesso a memória;
+    \item Taxa de acesso a memória;
     \item Mêtodo de execução.
   \end{enumerate}
   Para entender o impacto desses aspectos no tempo de execução, vamos dar uma olhada no hardware de uma GPU...
@@ -99,20 +95,21 @@ keywordstyle=\color{blue}}
   \end{columns}
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Como um programa roda na GPU?}
+  \begin{columns}
+    \begin{column}{.4\textwidth}
+      \includegraphics[scale=0.3]{opencl_figure2small.jpg}
+    \end{column}
+    \begin{column}{.6\textwidth}
+      \includegraphics[scale=0.3]{opencl_figure3.jpg}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 %-------------------------------------
 \section{Comparação entre as linguagens}
 %-------------------------------------
-
-\frame{
-  \frametitle{Termos Técnicos}
-  A explicação dos termos técnicos que serão usados:
-  \begin{itemize}
-    \item[Kernel] Função que será executada em cada processador da placa de vídeo.
-    \item[Host]   Programa que tem a função de preparar o ambiente para o kernel e iniciá-lo na GPU.
-    \item[SIMD]   \textit{Single Instrution, Multiple Data}. As GPU executam suas tarefas usando esse paradigma.
-    \item[Device]   Hardware onde os kernels serão executados, normalmente uma GPU ou CPU.
-  \end{itemize}
-}
 
 \frame{
   \frametitle{Semelhanças}
@@ -288,13 +285,13 @@ keywordstyle=\color{blue}}
   \begin{enumerate}
     \item O OpenCL usa um registrador a mais que o CUDA para calcular o indice de uma thread.
     \item O OpenCL faz mais leituras da memória padrão que o CUDA. 
+    \item O OpenCL só tem acesso aos operadores de 32 bits da GPU.
   \end{enumerate}
 \end{frame}
 
 \begin{frame}
   \frametitle{Comparação dos PTX}
-  Pelos resultados dos .ptx, é evidente que o compilador para PTX do CUDA é mais otimizado que o do OpenCL. \\
+  Pelos resultados dos .ptx, podemos ver que o compilador para PTX do CUDA é mais otimizado que o do OpenCL. \\
 \end{frame}
-
 
 \end{document}
