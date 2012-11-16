@@ -27,28 +27,32 @@ um cache de instruções e 8 unidades de funções especiais. A Geforce GTX 460 
 O código que será executado em cada processador é chamado de \textbf{kernel}. Então, ao executar um kernel na GPU, o 
 hardware criará threads, cada uma executando esse mesmo kernel mas com dados diferentes. Nas placas NVIDIA as threads 
 são agrupadas em blocos, e esses blocos são escalonados para cada SM. Depois, todas as threads dentro de um bloco são 
-escalonadas por grupos de 8, esses grupos chamados de \textbf{warp}, e cada warp é executado paralelamente dentro do 
-mesmo SM para qual o bloco foi escalonado.
+divididas em pequenos grupos. Esses grupos chamados de \textbf{warp}, e cada warp é executado paralelamente dentro do 
+mesmo SM para qual o bloco foi escalonado. Existe um limite para a quantidade de threads escalonadas para execução
+dentro de um SM, que é definida pelos recursos que cada thread consome. Por exemplo, não há como executar 10 threads
+que consomem 10 registradores cada em um SM com 90 registradores.
 
-Outra parte importante do hardware é a memória. A memória na GPU é limitada em relação à da CPU. GPUs tem, em média, 1GB
-de memória, enquanto CPUs tem 4GB. Outro fator é a transferencia de dados da memória principal do computador para a memória 
-principal da GPU. A transmissão é feita por um barramento PCI Express, com velocidades de até 16GB/s, dado que o
-barramento esteja sendo usado somente para isso. Essa transmissão é a parte mais lenta de todo o
+Outra parte importante do hardware é a memória, que é limitada em relação à da CPU. GPUs tem, em média, 1GB
+de memória, enquanto CPUs tem 4GB. O acesso a um mesmo bloco de memória é concorrente, mas ao utilizar os caches e leitura/escritas em
+conjunto podemos minimizar a taxa com que leituras/escritas conflitantes são feitas. Mas ainda sim é necessário atenção ao escrever um
+kernel. Dada a estrutura do hardware da GPU, é melhor deixar threads que façam operações sobre posições de memória próximas no mesmo
+SM, assim elas podem utilizar a memória compartilhada do mesmo, e elas podem requisitar em conjunto um mesmo bloco da memória principal,
+se necessário.
+
+No caso da GTX460 cada SM tem um bloco de memória de 64KB. Esse bloco pode ser configurado para 16KB de memória compartilhada e 48KB
+de cache L1 ou vice versa. A memória principal da placa é de 1024MB com conexões de 256 bits. A placa também tem um
+cache L2 de 512KB.
+
+Outro fator limitante é a transferência de dados da memória principal do computador para a memória 
+principal da GPU. A transmissão é feita por um barramento PCI Express, com velocidades de até 16GB/s ( dado que o
+barramento seja utilizado somente pela GPU ). Essa transmissão é a parte mais lenta de todo o
 processo de execução na GPU e dado isso, em alguns casos é mais viável executar na GPU um pedaço do seu programa que seria executado
 na CPU do que retornar os dados computados na GPU para a CPU, executar esse pedaço especifico, e passá-los de volta para a GPU 
 para mais operações e novamente retornar esses dados para a CPU no final, passando duas vezes a mais pelo PCI Express. 
 
-Cada SM tem um bloco de memória de 64KB. Esse bloco pode ser configurado para 16KB de memória compartilhada e 48KB
-de cache L1 ou vice versa. A memória principal da placa é de 1024MB com conexões de 256 bits. A placa também tem um
-cache L2 de 512KB.
-
-É importante conhecer a memória física da placa para qual se está programando por que acesso a memória é um dos maiores
-modificadores no desempenho de um programa paralelo. O acesso a memória é concorrente, mas ao utilizar caches e leitura/escritas em
-blocos podemos minimizar a taxa com que leituras/escritas conflitantes são feitas. Mas ainda sim é necessário atenção ao escrever um
-kernel. Dada a estrutura do hardware da GPU, é melhor deixar threads que façam operações sobre posições de memória próximas no mesmo
-SM, assim elas podem utilizar a memória compartilhada do mesmo, que além de ser mais rápido do que buscar os dados na memória principal,
-não cria um padrão de buscas frequentes na memoria principal, que acabaria criando uma fila de acesso das threads e diminuiria o desempenho
-do programa.
+Ao estudar como o código é executado nas GPUs NVIDIA descobrimos a existência de uma máquina virtual chamada de Parallel Thread Execution.
+Todo kernel é primeiro compilado para um arquivo .ptx que é executado na GPU através da máquina PTX. Ela é utilizada para garantir 
+a retrocompatibilidade de kernels em placas mais antigas.
 
 \subsection{CUDA}
 \textit{Compute Unified Device Architecture} (CUDA) é uma arquitetura de programação para GPUs criada pela NVIDIA.
@@ -227,19 +231,32 @@ Um \textit{Context} é um conjunto de \textit{Devices}, \textit{Kernels}, \texti
 \textit{Devices} e \textit{Kernels} já foram explicados acima, e \textit{Memory Objects} serão explicados na subseção abaixo.
 \textit{Program Objects} são objetos que tem as seguintes informações:
 \begin{itemize}
-  \item O código fonte ou binário que será transformado enas funções de um ou mais kernels.
-  \item O número de kernels dentro desse binário ou fonte.
-  \item O log da compilação se o objeto tiver um código fonte.
+  \item Binário que será transformado nas funções de um ou mais kernels;
+  \item O número de kernels dentro desse binário;
+  \item O log da compilação, caso necessário;
   \item Uma referência para o \textit{context} e os \textit{devices} que ele está associado.
 \end{itemize}
+
+O binário de um \textit{Program Object} pode ser compilado em tempo de execução por uma função do OpenCL.
 
 Com um \textit{conext} criado e inicializado, o \textit{host} controla a execução dele usando um objeto chamado \textbf{Command-Queue}.
 O \textit{host} adiciona comando a uma \textit{command-queue} que está associada a um \textit{context}, e os comandos são executados
 dentro dos \textit{devices} do \textit{context}. Os comandos são divididos em 3 tipos:
 \begin{itemize}
-  \item Comandos de execução de kernel.
-  \item Comandos de transferência de memória
-  \item Comandos de sincronização
+  \item Comandos de execução de kernel;
+        \begin{lstlisting}
+          clEnqueueNDRangeKernel(queue, kernel, 2, NULL, 
+              work_dim, local_dim, 0, NULL, &event);
+        \end{lstlisting}
+  \item Comandos de transferência de memória;
+        \begin{lstlisting}
+          clEnqueueWriteBuffer(queue, columnSize, CL_TRUE, 
+              0, sizeof(int), &sizeC, 0, NULL, &event);
+        \end{lstlisting}
+  \item Comandos de sincronização.
+        \begin{lstlisting}
+          clFinish(queue);
+        \end{lstlisting}
 \end{itemize}
 Esses comandos podem ser executados sequêncialmente, onde um comando na \textit{command-queue} espera todos os anteriores a ele executarem para
 executar, ou de forma não sequêncial, onde a \textit{command-queue} só define a ordem em que os comandos terão sua execução iniciada, mas não se 

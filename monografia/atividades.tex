@@ -1,37 +1,29 @@
 \section{Atividades Realizadas}
 \subsection{Comparação das abstrações}
-Podemos ver que as abstrações de execução das duas linguagens são bem parecidas. Cada uma delas tem tem uma abstração
-para threads rodando o kernel ( \textit{work-item} para o OpenCL e \textit{CUDA threads} para o CUDA). Nas duas linguagens
-existe uma abstração para dispor as threads num conjunto de até 3 dimensões. 
+Como as duas linguagens foram desenvolvidas com base num hardware em comum, as suas abstrações são bem parecidas. 
+Cada uma delas tem uma abstração para as threads executando o kernel ( \textit{work-item} para o OpenCL e \textit{CUDA threads} para o CUDA). 
 
 Toda thread, em ambas as linguagens, tem um ID único que a identifica em relação a todas as threads em execução (o ID global) 
 e um ID que a identifica unicamente dentro de um bloco (o ID local). O ID global é uma combinação do ID local com o ID do bloco. 
 É comum usar o ID das threads para identificar quais os dados que ela irá receber. No exemplo desse trabalho, o ID 
 global das threads é usado para determinar qual posição das matrizes ela irá usar nas suas operações. 
 
-Como os processadores das GPUs estão agrupados em vários streaming multiprocessors, as linguagens criam uma organização lógica para
-separar as threads em blocos (\textit{work-group} no OpenCL e \textit{block} no CUDA). A execuçãi dos blocos devem ser independentes entre
-si, ou seja, o bloco A pode ser escalonado antes do bloco B ou vice versa e o resultao final deve ser o mesmo. Dado isso, o escalonador
-irá escalonar primeiramente os blocos e só depois as threads são escalonadas dentro dos blocos. Threads dentro
-do mesmo bloco compartilham recursos como o acesso a memória, um escalonador espera um número de requisições suficientemente grande 
-antes de tentar acessar a memória global, tentando minimizar o número de acessos pelo bloco; todas as threads de um mesmo bloco
-compartilham uma região de memória compartilhada e um conjunto de processadores para funções especiais, como por exemplo
-rasterizações ou funções geeométricas. 
+Para representar a separação das threads nos blocos que serão excalonados para os SM, as duas linguagens implementam uma organização
+lógica para separar as threads em blocos (\textit{work-group} no OpenCL e \textit{block} no CUDA).
 
-Os blocos são agrupados em um conjunto maior que determina o número total de threads por kernel sendo executado. 
+Os blocos são agrupados em um conjunto maior que engloba todas as threads de um kernel.
 No OpenCL, esse conjunto se chama \textit{NDRange} e no CUDA \textit{Grid}. O OpenCL cria um NDRange por execução do kernel
 e as dimensões do NDRange e dos work-groups dentro dele são iguais. O espaço de indices das threads de um NDRange pode começar 
 tanto de zero quanto de um número definido pelo usuário, facilitanto operações em posições de memória deslocadas dentro 
 do espaço de memória do problema.
 	
 Já no CUDA, os Grids podem ter sua dimensão diferente da dimensão dos blocks. O espaço de indices das threads é limitado a começar 
-do zero e existe um limite de 1024 threads por block, resultado da divisão de memória que o CUDA faz para cada block. A execução
-de um kernel é representada por um único grid.
-\\
+do zero. A execução de um kernel é representada por um único grid. Notou-se que o compilador do CUDA devolve um erro ao compilar um kernel
+que não respeita o tamanho máximo de threads num bloco, enquanto o OpenCL compila, mas o resultado da execução do kernel é sempre
+inesperado.
 
 Sobre a memória, as duas linguagens deixam a criação e alocação da memória para o \textit{host}. Cada uma delas define uma maneira
-diferente de tratar a memória, no CUDA a memória do device é tratada como um simples ponteiro. 
-O OpenCL cria objetos de memória que serão
+diferente de tratar a memória. No CUDA a memória do device é tratada como um simples ponteiro. Já o OpenCL cria objetos de memória que serão
 mapeados para a memória do \textit{device}. As operações de leitura e escrita nesses objetos são feitos através de uma fila de 
 execução e de diretivas auxiliares para a inicialização e alocação.
 
@@ -39,5 +31,78 @@ A memória pode ser direcionada para qualquer um dos 4 espaços do device, usand
 dentro do kernel.
 \subsection{Comparação de eficiencia}
 \subsubsection{Como fazer a comparação?}
+Bem, como fazer a comparação entre essas duas linguagens? A ideia é criar dois tipos de kernels nas duas linguagens, cada tipo
+para comparar duas caracteristicas importante das linguagens:
+\begin{itemize}
+  \item O desempenho ao acessar a memória;
+  \item A capacidade de utilizar o processamento da GPU.
+\end{itemize}
 \subsubsection{Montagem dos kernels}
-\subsection{Comparação entre os arquivos .ptx}
+Para testar o desempenho ao acessar a memória, um kernel que faz a cópia de uma matriz de floats foi usado. O código desse kernel
+tanto em OpenCL:
+
+\begin{lstlisting}
+  __kernel void MatrixCopy (__global float* a, 
+                            __global float* b, 
+                            __global int* rowSize, 
+                            __global int* columnSize) {
+    unsigned int row = get_global_id(0);
+    unsigned int column = get_global_id(1);
+	  b[row+column*(*rowSize)] = a[row+column*(*rowSize)];
+  }
+\end{lstlisting}
+
+Como em CUDA:
+
+\begin{lstlisting}
+  __global__ void MatrixCopy (float* MatrixA, 
+                              float* MatrixB, 
+                              int rowSize, 
+                              int columnSize) {
+    int row = blockIdx.x*blockDim.x+threadIdx.x;
+    int column = blockIdx.y*blockDim.y+threadIdx.y;
+    MatrixB[row+column*columnSize] = MatrixA[row+column*columnSize];
+  }
+\end{lstlisting}
+
+As primeiras linhas de cada kernel determinam qual posição da matriz será copiada usando o ID global da thread.
+A última linha faz a cópia da matriz A para a matriz B. \\
+
+Já para testar a capacidade do processamento das linguagens usamos um kernel que faz a multiplicação de duas matrizes de floats e guarda
+o resultado numa terceira.
+Em OpenCL:
+\begin{lstlisting}
+  __kernel void matrixmulti(__global float* MatrixA, 
+                            __global float* MatrixB, 
+                            __global float* MatrixC, 
+                            __global int* N) {
+    unsigned i = get_global_id(0);
+    unsigned j = get_global_id(1);
+    unsigned k;
+    MatrixC[i*(*N)+j] = 0;
+    for( k = 0; k < (*N); k++ ) 
+    	MatrixC[i*(*N)+j] += MatrixA[i*(*N)+k]*MatrixB[j+k*(*N)];
+  }
+\end{lstlisting}
+E em CUDA:
+\begin{lstlisting}
+  __global__ void MatrixCopy (float* MatrixA, 
+                              float* MatrixB, 
+                              float* MatrixC, 
+                              int N) {
+    int row = blockIdx.x*blockDim.x+threadIdx.x;
+    int column = blockIdx.y*blockDim.y+threadIdx.y;
+    int k;
+    MatrixC[column*N+row] = 0;
+    for (k = 0; k < N; k++ )
+      MatrixC[column*N+row] += MatrixA[column*N+k]*MatrixB[k*N+row];
+  }
+\end{lstlisting}
+
+Novamente, as primeiras linha fazem a distribuição da posição de memória para cada thread, enquanto as duas últimas linhas fazem a multiplicação em si. \\
+
+\subsection{Os arquivos .ptx}
+
+Ao executar um kernel numa GPU NVIDIA ele não é executado diretamente no hardware, na verdade ele passa pela máquina virtual PTX, como dito anteriormente.
+Ao descobrir esse fato, decidimos comparar os .ptx resultantes da compilação dos nossos kernels para a máquina PTX.  \\
+Os arquivos ptx usam uma linguagem parecida com o \textbf{Assembly}, com modificações para operações vetoriais e conjuntos de operações.
