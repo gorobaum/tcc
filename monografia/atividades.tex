@@ -105,7 +105,9 @@ Novamente, as primeiras linha fazem a distribuição da posição de memória pa
 
 Ao executar um kernel numa GPU NVIDIA ele não é executado diretamente no hardware, na verdade ele passa pela máquina virtual PTX, como dito anteriormente.
 Ao descobrir esse fato, decidimos comparar os .ptx resultantes da compilação dos nossos kernels para a máquina PTX.
-Os arquivos ptx usam uma linguagem parecida com o \textbf{Assembly}, com comandos especiais para as operações únicas de uma GPU, como operações vetoriais. \\
+Os arquivos ptx usam uma linguagem parecida com o \textbf{Assembly}, com comandos especiais para as operações únicas de uma GPU, como operações vetoriais.
+
+Para gerar o PTX de um kernel basta acresentar a flag de compilação \textit{--ptx} para o \textit{nvcc}. \\
 
 Os comandos PTX podem conter modificadores, por exemplo:
 
@@ -122,9 +124,28 @@ enquanto no exemplo abaixo,
 
 o mesmo comando usando em conjunto com o modificador \textit{.global} irá buscar na memória global o que deve ser carregado para o registrador.
 Os modificadores \textit{.u64} e \textit{.f32} definem o tipo a ser tratado, no caso \textit{.u} é um \textbf{Unsigned Int} e \textit{.f} um
-\textbf{Float}, e o número define o tamanho do endereço. \\
+\textbf{Float}, e o número define o tamanho do endereço. 
 
-Vamos usar como exemplo para estudar a linguagem o kernel de acesso a memória em PTX, feito em CUDA, abaixo:
+Nas GPUs NVIDIA, onde várias threads comparlilham o mesmo ponteiro de instrução, cada thread pode modificar os seus registradores para que eles 
+funcionem como registradores booleanos usando a diretiva \textit{.reg .pred}. Com isso, esses registradores podem receber valores de operadores
+lógicos definidos dentro do PTX. Eles podem ser usandos em conjunto com o símbolo @, que no PTX define se uma instrução será ou não executada
+baseando-se no valor do operador lógico adjunto a ela.
+Por exemplo:
+
+\begin{lstlisting}
+  @%p1 bra 	BB0_3;
+\end{lstlisting} 
+
+A instrução \textit{bra} só será executada se o registrador \textit{p1} conter \textbf{TRUE}. \\
+
+A instrução \textit{bra} define uma separação na estrutura de execução de um warp. Ao encontrar um branch, todas as threads que seguirem esse branch 
+ganham um novo apontador de instruções e continuam a sua execução em paralelo, criando um novo segmento de execução. Por exemplo, se de 16 threads 
+5 entram em um \textbf{if} e o restante passa por ele, temos 2 segmentos de execução. Todas as threads de um mesmo segmento são executadas concorrentemente, 
+enquanto as threads de outro segmento esperam sua vez para executar. Então no nosso exemplo, no primeiro ciclo dos processadores de um SM 5 threads serão
+executadas, e no próximo ciclo 11 threads, e no seguinte as 5 iniciais, e assim por diante.
+ 
+Agora que já cobrimos as peculiaridades importantes do PTX, vamos usar como exemplo para estudar a execução de um PTX o kernel de cópia de memória feito
+em CUDA.
 
 \begin{lstlisting}
   .version 3.0
@@ -223,11 +244,48 @@ A próxima etapa carrega os parâmetros em registradores,
 \end{lstlisting}
 
 É importante lembrar que os dois primeiros parâmetros são ponteiros. Ao carregar um ponteiro num registrador, o PTX não sabe se esse endereço faz
-referência a memória local, global, constante ou a dividida entre as threads, então o próximo comando transforma esse ponteiro chamado de genêrico
-no PTX num ponteiro para memória global:
+referência a memória local, global, constante ou a dividida entre as threads, então a próxima instrução é usada para transformar um ponteiro genérico
+em um ponteiro global:
 
 \begin{lstlisting}
   cvta.to.global.u64 	%rl3, %rl2;
 \end{lstlisting}
 
-Com os parâmetros necessários 
+Com os parâmetros necessários carregados e devidamente ajustados, o próximo passo do kernel é calcular o índice da thread. A GPU tem 3 registradores
+específicos que guardam o índice local de uma thread. As próximas instruções mostram como calculcar o índice global de uma thread num kernel de 
+2 dimensões:
+
+\begin{lstlisting}
+    mov.u32 	%r2, %ntid.x;
+    mov.u32 	%r3, %ctaid.x;
+    mov.u32 	%r4, %tid.x;
+    mad.lo.s32 	%r5, %r2, %r3, %r4;
+    mov.u32 	%r6, %ntid.y;
+    mov.u32 	%r7, %ctaid.y;
+    mov.u32 	%r8, %tid.y;
+    mad.lo.s32 	%r9, %r6, %r7, %r8;
+    mad.lo.s32 	%r10, %r5, %r1, %r9;
+\end{lstlisting}
+
+A instrução \textit{mov} preenche um registrador com dados de uma posição não-genérica de memória. A instrução \textit{mad} multiplica o segundo argumento
+pelo terceiro, soma o quarto à multiplicação e guarda o resultado total em um registrador. Os dois primeiros \textit{mad} calculam os índices da thread,
+cada um numa dimensão diferente. O terceiro \textit{mad} usa os dois índices e o parâmetro que contém o tamanho da matriz para calcular em qual posição da 
+matriz a thread atual irá operar. \\
+
+O que resta é copiar os dados de uma matriz para a outra.
+
+\begin{lstlisting}
+	cvta.to.global.u64 	%rl4, %rl1;
+  mul.wide.s32 	%rl5, %r10, 4;
+	add.s64 	%rl6, %rl4, %rl5;
+	add.s64 	%rl7, %rl3, %rl5;
+	ld.global.f32 	%f1, [%rl6];
+	st.global.f32 	[%rl7], %f1;
+  ret;
+\end{lstlisting}
+
+O último parâmetro usado, o ponteiro para a matriz que será copiada, é transformado pela instrução \textit{cvta}. Os dois \textit{add} adicionam os índices
+da thread ao ponteiro das matrizes, criando um offset que referência a posição que aquela thread deve usar para a cópia. O \textit{ld} carrega o valor dessa
+posição num registrador que depois é copiado para a matriz destino usando a instrução \textit{st}, e por fim o kernel finaliza. Não foi encontrado nada
+na documentação do PTX nem nenhum motivo aparente no kernel que explique a multiplicação da posição da matriz que será operada por quatro, mas essa operação
+é constante nos dois tipos de kernel e tanto no OpenCL quanto no CUDA.
