@@ -99,10 +99,135 @@ E em CUDA:
   }
 \end{lstlisting}
 
-Novamente, as primeiras linha fazem a distribuição da posição de memória para cada thread, enquanto as duas últimas linhas fazem a multiplicação em si. \\
+Novamente, as primeiras linha fazem a distribuição da posição de memória para cada thread, enquanto as duas últimas linhas fazem a multiplicação em si.
 
 \subsection{Os arquivos .ptx}
 
 Ao executar um kernel numa GPU NVIDIA ele não é executado diretamente no hardware, na verdade ele passa pela máquina virtual PTX, como dito anteriormente.
-Ao descobrir esse fato, decidimos comparar os .ptx resultantes da compilação dos nossos kernels para a máquina PTX.  \\
-Os arquivos ptx usam uma linguagem parecida com o \textbf{Assembly}, com modificações para operações vetoriais e conjuntos de operações.
+Ao descobrir esse fato, decidimos comparar os .ptx resultantes da compilação dos nossos kernels para a máquina PTX.
+Os arquivos ptx usam uma linguagem parecida com o \textbf{Assembly}, com comandos especiais para as operações únicas de uma GPU, como operações vetoriais. \\
+
+Os comandos PTX podem conter modificadores, por exemplo:
+
+\begin{lstlisting}
+  ld.param.u64 	%rl1, [_Z10MatrixCopyPfS_ii_param_0];
+\end{lstlisting}
+
+em que o comando \textit{ld}, usado para preencher algum endereço de memória, usa o modificador \textit{.param} para carregar um parâmetro do kernel,
+enquanto no exemplo abaixo,
+
+\begin{lstlisting}
+  ld.global.f32 	%f1, [%rl6];
+\end{lstlisting}
+
+o mesmo comando usando em conjunto com o modificador \textit{.global} irá buscar na memória global o que deve ser carregado para o registrador.
+Os modificadores \textit{.u64} e \textit{.f32} definem o tipo a ser tratado, no caso \textit{.u} é um \textbf{Unsigned Int} e \textit{.f} um
+\textbf{Float}, e o número define o tamanho do endereço. \\
+
+Vamos usar como exemplo para estudar a linguagem o kernel de acesso a memória em PTX, feito em CUDA, abaixo:
+
+\begin{lstlisting}
+  .version 3.0
+  .target sm_20
+  .address_size 64
+
+  .file	1 "/tmp/tmpxft_00001b52_00000000-9_memory.cpp3.i"
+  .file	2 "memory.cu"
+
+  .entry _Z10MatrixCopyPfS_ii(
+	  .param .u64 _Z10MatrixCopyPfS_ii_param_0,
+	  .param .u64 _Z10MatrixCopyPfS_ii_param_1,
+	  .param .u32 _Z10MatrixCopyPfS_ii_param_2,
+	  .param .u32 _Z10MatrixCopyPfS_ii_param_3
+  )
+  {
+	  .reg .f32 	%f<2>;
+	  .reg .s32 	%r<13>;
+	  .reg .s64 	%rl<8>;
+
+
+	  ld.param.u64 	%rl1, [_Z10MatrixCopyPfS_ii_param_0];
+	  ld.param.u64 	%rl2, [_Z10MatrixCopyPfS_ii_param_1];
+	  ld.param.u32 	%r1, [_Z10MatrixCopyPfS_ii_param_3];
+	  cvta.to.global.u64 	%rl3, %rl2;
+	  mov.u32 	%r2, %ntid.x;
+	  mov.u32 	%r3, %ctaid.x;
+	  mov.u32 	%r4, %tid.x;
+	  mad.lo.s32 	%r5, %r2, %r3, %r4;
+	  mov.u32 	%r6, %ntid.y;
+	  mov.u32 	%r7, %ctaid.y;
+	  mov.u32 	%r8, %tid.y;
+	  mad.lo.s32 	%r9, %r6, %r7, %r8;
+	  mad.lo.s32 	%r10, %r5, %r1, %r9;
+	  cvta.to.global.u64 	%rl4, %rl1;
+	  mul.wide.s32 	%rl5, %r10, 4;
+	  add.s64 	%rl6, %rl4, %rl5;
+	  add.s64 	%rl7, %rl3, %rl5;
+	  ld.global.f32 	%f1, [%rl6];
+	  st.global.f32 	[%rl7], %f1;
+	  ret;
+  }
+\end{lstlisting}
+
+As primeiras linhas,
+
+\begin{lstlisting}
+  .version 3.0
+  .target sm_20
+  .address_size 64
+\end{lstlisting}
+
+definem o ambiente que deve ser preparado na GPU para a execução do kernel. A primeira linha define a versão da máquina PTX, a segunda
+qual a versão da API de comunicação com a GPU deve ser usada e a última o tamanho do endereçamento a ser usado. \\
+As próximas linhas, 
+
+\begin{lstlisting}
+  .file	1 "/tmp/tmpxft_00001b52_00000000-9_memory.cpp3.i"
+  .file	2 "memory.cu"
+\end{lstlisting}
+
+associam um inteiro aos arquivos que podem ser usados no kernel. Esses arquivos são acessados usando esse indice, caso necessário.
+Nesse caso o primeiro \textit{.file} associa a 1 o binário do kernel e a 2 o código fonte. \\
+
+Agora, ao kernel em si. A próxima linha,
+
+\begin{lstlisting}
+  .entry _Z10MatrixCopyPfS_ii(
+	  .param .u64 _Z10MatrixCopyPfS_ii_param_0,
+	  .param .u64 _Z10MatrixCopyPfS_ii_param_1,
+	  .param .u32 _Z10MatrixCopyPfS_ii_param_2,
+	  .param .u32 _Z10MatrixCopyPfS_ii_param_3
+  )
+\end{lstlisting}
+
+define tanto o ponto de entrada da execução quanto os parâmetros recebidos pelo kernel. A diretiva \textit{.entry} define o ponto de inicio da execução do kernel.
+Os \textit{.param} definem um meio do kernel acessar os parâmetros passados pelo \textit{Host}, além de configurar o tamanho do endereçamento deles. 
+O último parâmetro da diretiva \textit{.param} é a tag que será usada pelo comando \textit{ld.param} para carregar os parâmetros em registradores. \\
+
+Já em execução, a primeira coisa que uma thread faz é alocar os registradores que ela irá usar, com a diretiva \textit{.reg},
+
+\begin{lstlisting}
+	  .reg .f32 	%f<2>;
+	  .reg .s32 	%r<13>;
+	  .reg .s64 	%rl<8>;
+\end{lstlisting}
+
+Os parâmetros dessa diretiva definem o tipo do registrador ( \textit{\%f} para \textbf{Float} ) e o número de registradores ( \textit{<n>} para $n$ registradores ). \\
+
+A próxima etapa carrega os parâmetros em registradores,
+
+\begin{lstlisting}
+	  ld.param.u64 	%rl1, [_Z10MatrixCopyPfS_ii_param_0];
+	  ld.param.u64 	%rl2, [_Z10MatrixCopyPfS_ii_param_1];
+	  ld.param.u32 	%r1, [_Z10MatrixCopyPfS_ii_param_3];
+\end{lstlisting}
+
+É importante lembrar que os dois primeiros parâmetros são ponteiros. Ao carregar um ponteiro num registrador, o PTX não sabe se esse endereço faz
+referência a memória local, global, constante ou a dividida entre as threads, então o próximo comando transforma esse ponteiro chamado de genêrico
+no PTX num ponteiro para memória global:
+
+\begin{lstlisting}
+  cvta.to.global.u64 	%rl3, %rl2;
+\end{lstlisting}
+
+Com os parâmetros necessários 
