@@ -8,7 +8,8 @@
 \usecolortheme{whale}
 
 \title{Comparação de eficiência entre OpenCL e CUDA}
-\author{Thiago de Gouveia Nunes}
+\author{\textbf{Aluno}: Thiago de Gouveia Nunes \\ \textbf{Orientador}: Prof. Marcel P. Jackowski}
+\date{}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -47,13 +48,18 @@
 \frame{\titlepage}
 
 %-------------------------------------
-\section{Tecnologias}
+\section{Introdução}
 %-------------------------------------
 
 \frame{
   \frametitle{GPGPU}
-  O que é GPGPU?
+  O que é GPGPU? \\
+  É programação de propósito geral em GPUs. =D
 }
+
+%-------------------------------------
+\section{Tecnologias}
+%-------------------------------------
 
 \frame{
   \frametitle{GPGPU}
@@ -86,12 +92,16 @@
   
 }
 
+%-------------------------------------
+\section{Ideia Inicial}
+%-------------------------------------
+
 \begin{frame}[fragile]
   \frametitle{Como comparar?}
   Bem, para comparar as linguagens, vamos observar 2 aspectos delas:
   \begin{enumerate}
     \item Taxa de acesso a memória;
-    \item Mêtodo de execução.
+    \item Método de execução.
   \end{enumerate}
   Para entender o impacto desses aspectos no tempo de execução, vamos dar uma olhada no hardware de uma GPU...
 \end{frame}

@@ -207,8 +207,8 @@ As próximas linhas,
   .file	2 "memory.cu"
 \end{lstlisting}
 
-associam um inteiro aos arquivos que podem ser usados no kernel. Esses arquivos são acessados usando esse indice, caso necessário.
-Nesse caso o primeiro \textit{.file} associa a 1 o binário do kernel e a 2 o código fonte. \\
+associam um inteiro aos arquivos que podem ser usados no kernel. Esses arquivos são acessados usando esse índice, caso necessário.
+Nesse caso o primeiro \textit{.file} associa a 1 o binário do kernel e a 2 o código fonte.\\
 
 Agora, ao kernel em si. A próxima linha,
 
@@ -243,9 +243,10 @@ A próxima etapa carrega os parâmetros em registradores,
 	  ld.param.u32 	%r1, [_Z10MatrixCopyPfS_ii_param_3];
 \end{lstlisting}
 
-É importante lembrar que os dois primeiros parâmetros são ponteiros. Ao carregar um ponteiro num registrador, o PTX não sabe se esse endereço faz
-referência a memória local, global, constante ou a dividida entre as threads, então a próxima instrução é usada para transformar um ponteiro genérico
-em um ponteiro global:
+É importante lembrar que os dois primeiros parâmetros são ponteiros. Ao carregar um ponteiro num registrador, 
+o PTX não sabe se esse endereço faz referência a memória local, global, constante ou a dividida entre as threads, 
+então a próxima instrução é usada para transformar um ponteiro genérico em um ponteiro global. É possível determinar
+a qual posição da memória o ponteiro aponta ao definir os parâmetros, mas o CUDA não faz isso.
 
 \begin{lstlisting}
   cvta.to.global.u64 	%rl3, %rl2;

@@ -1,1 +1,20 @@
 \section{Conclusões}
+Pelos gráficos apresentados na seção anterior, o CUDA apresenta uma velocidade de processamento, em média, dez vezes mais rápida que o OpenCL.
+Depois de verificar isso, estudei melhor o que poderia levar a essa diferença, e nesse ponto eu entendi como a máquina PTX funcionava 
+na realidade. Como as duas linguagens convergem para código PTX, o que faria diferença no desempenho seriam
+a compilação para o PTX e o escalonamento e divisão de trabalho para as threads. Na divisão de trabalho as duas linguagens
+são iguais, passando uma instância de kernel para cada thread e criando sempre threads novas, nunca reutilizando um grupo delas.
+O escalonamento em sí é identico para as duas linguagens, pois quem cuida do escalonamento é um pedaço do hardware da GPU, o que
+importa dado isso é o número de blocos e o número de threads por bloco mandados para o escalonador. Para retirar essa variável da equação
+eu fiz com que os kernels das duas linguagens usassem o mesmo número de blocos e o mesmo número de threads por bloco.
+
+O que sobrou para justificar essa diferença de desempenho foi o PTX. Podemos verificar uma grande falha no compilador para PTX do OpenCL
+no código PTX dos kernels de multiplicação de matrizes.O do CUDA calcula a posição que será utilizada somente uma vez, e a cada passada
+do loop adiciona o valor de $k$, já o OpenCL calcula a toda passada essa posição e adicionar o $k$. Isso faz com que o desempenho do
+OpenCL seja inferior ao do CUDA, pois são com matrizes de tamanhho grande que se tem o melhor ganho de desempenho na GPU em comparação
+com uma CPU, e o OpenCL faz com que cada thread faça o mesmo cálculo para cada iteração no tamanho de uma linha dessas matrizes.
+
+Mas por que o compilador do OpenCL é tão ineficiente? Ao fazer uma pesquisa sobre os drivers que o OpenCL usa para executar nas GPUs NVIDIA
+( e são nesses drivers que o compilador se encontra ) descobri que a última atualização documentada desses drivers foi feita em Junho de 2010
+para dar suporte a versão 1.1 do OpenCL. Dessa data até hoje os drivers não foram atualizados para fornecer acesso as melhorias que o hardware
+das GPUs sofreram.
