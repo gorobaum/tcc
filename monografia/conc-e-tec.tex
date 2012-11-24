@@ -27,7 +27,7 @@ um cache de instruções e 8 unidades de funções especiais. A Geforce GTX 460 
 O código que será executado em cada processador é chamado de \textbf{kernel}. Então, ao executar um kernel na GPU, o 
 hardware criará threads, cada uma executando esse mesmo kernel mas com dados diferentes. Nas placas NVIDIA as threads 
 são agrupadas em blocos, e esses blocos são escalonados para cada SM. Depois, todas as threads dentro de um bloco são 
-divididas em pequenos grupos. Esses grupos chamados de \textbf{warp}, e cada warp é executado paralelamente dentro do 
+divididas em pequenos grupos. Esses grupos chamados de \textbf{warp}\cite{paulo}, e cada warp é executado paralelamente dentro do 
 mesmo SM para qual o bloco foi escalonado. Existe um limite para a quantidade de threads escalonadas para execução
 dentro de um SM, que é definida pelos recursos que cada thread consome. Por exemplo, não há como executar 10 threads
 que consomem 10 registradores cada em um SM com 90 registradores.
@@ -50,12 +50,12 @@ processo de execução na GPU e dado isso, em alguns casos é mais viável execu
 na CPU do que retornar os dados computados na GPU para a CPU, executar esse pedaço especifico, e passá-los de volta para a GPU 
 para mais operações e novamente retornar esses dados para a CPU no final, passando duas vezes a mais pelo PCI Express. 
 
-Ao estudar como o código é executado nas GPUs NVIDIA descobrimos a existência de uma máquina virtual chamada de Parallel Thread Execution.
+Ao estudar como o código é executado nas GPUs NVIDIA descobrimos a existência de uma máquina virtual chamada de Parallel Thread Execution\cite{ptx}.
 Todo kernel é primeiro compilado para um arquivo .ptx que é executado na GPU através da máquina PTX. Ela é utilizada para garantir 
 a retrocompatibilidade de kernels em placas mais antigas.
 
 \subsection{CUDA}
-\textit{Compute Unified Device Architecture} (CUDA) é uma arquitetura de programação para GPUs criada pela NVIDIA.
+\textit{Compute Unified Device Architecture} (CUDA)\cite{cuda} é uma arquitetura de programação para GPUs criada pela NVIDIA.
 Ele adiciona suas diretrizes para as linguagens C, C++, FORTRAN e Java, permitindo que elas usem a GPU.
 Esse trabalho usa o CUDA junto com a linguagem C.
 A versão 1.0 do CUDA foi disponibilizada no inicio de 2007. Atualmente só existe um compilador para CUDA, o nvcc,
@@ -160,7 +160,8 @@ que ele quer que aquele elemento fique na memória. Os possiveis qualificadores 
 GPUs com Compute Cabapility maior ou igual a 2.0 podem alocar memória dentro do \textit{device} em tempo de execução.
 
 \subsection{OpenCL}
-Open Computing Language (OpenCL) é uma framework aberta para programação genérica para varios procesadores, dentre eles GPUs e CPUs.
+Open Computing Language (OpenCL)\cite{khronosopencl} é uma framework aberta para programação genérica para varios procesadores, 
+dentre eles GPUs e CPUs.
 OpenCL da suporte para sistemas embarcados, sistemas pessoais, corporativos e até HPC. Ele consegue isso criando uma interface
 de baixo nível, ou seja, o mais próximo do hardware possivel, e mantendo auto desempenho, com uma abstração protátil. O OpencL
 também é uma API para controle de aplicações paralelas em sistemas com processadores heterogéneos. O OpenCL consegue, numa mesma
