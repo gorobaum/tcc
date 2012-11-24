@@ -4,11 +4,10 @@ function histogram(filename, titulo)
 	length(filename);
 	hist(dados, 20);
 	title(titulo);
-	grid();
-	box();
+	box;
+	grid;
 	xlabel("Tempo(ms)");
 	ylabel("Quantidade de Threads");
 	das = substr(filename, 1, length(filename)-4);
-	oi = strcat(das,"_histo.jpg");
-	print -F:45 -djpeg -oi r80;
-
+	oi 	= strcat(das,"_histo.jpg")
+	print -djpg macaco.jpg;
