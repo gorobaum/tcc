@@ -1,0 +1,33 @@
+\section{Parte Subjetiva}
+
+\subsection{Desafios e Frustrações}
+
+Bem, meu primeiro desafio foi entender como programar em OpenCL. Eu escolhi essa linguagem para começar
+pois parecia a mais simples, mas ela acabou se revelando a mais complicada das duas. A parte boa é que
+depois de ter terminado de estudar o OpenCL eu já tinha bem mais dominio sobre GPGPU. O segundo desafio
+foi conseguir compilar tanto os programas quanto os kernels. A compilação requer a instalação dos drivers
+com suporte para as linguagens, e isso foi um pouco problemático no Ubuntu. O último problema na parte de
+implementação do trabalho foi debuggar os kernels. A NVIDIA disponibiliza uma ferramenta para debug na GPU,
+o cuda-gdb, mas não consegui utilizar ele dentro da GPU, algo frustante. Outro problema é que a GPU tente
+a guardar os resultados das computações, então ao rodar duas vezes o mesmo kernel o mesmo resultado é retornado,
+o que fazia com que kernels errados parecessem certos e vice versa. Só depois eu descobri uma maneira de
+"resetar" o estado da GPU. Já sobre desenvolvimento do trabalho, foi bem difícil se focar num trabalho por
+tanto tempo. O meu orientador ajudou bastante no desenvolvmento tanto da parte escrita como na aplicação.
+
+\subsection{Disciplinas}
+
+\begin{description}
+  \item[\textbf{Organização de Computadores}] Essa matéria e Introdução à Computação Gráfica foram as duas que mais ajudaram no trabalho.
+      Org. Comp. deu o conhecimento do hardware necessário para entender o funcionamento da GPU e como um programa deve
+      ser feito para executar da melhor maneira nela.
+  \item[\textbf{Introdução à Computação Gráfica}] Computação Gráfica mostro como o pipeline da GPU funciona para o processamento gráfico,
+      e os EPs mostravam o poder de uma GPU, e como alguns algoritmos diferentes rodavam com desempenho diferentes, que deu uma ajuda
+      no ínicio do trabalho.
+  \item[\textbf{Laboratório de Programação I}] Usei vários programas introduzidos por essa matéria, como CMake, Makefile e o LaTeX.
+\end{description}
+
+\subsection{Próximos Passos}
+  Os próximos passos para o trabalho são medir o desempenho das linguagens em GPUs feitas para cálculo científico 
+  ( como a linha \textit {Quadro} da NVIDIA ) e medir o desempenho do OpenCL em sistemas com GPUs ATI, de preferência com GPUs ATI de mesmo
+  desempenho que a usada nos testes desse trabalho, para tentar medir um paralelo da diferença que os drivers desatualizados da NVIDIA
+  pesam no OpenCL
