@@ -58,15 +58,50 @@ importa dado isso é o número de blocos e o número de threads por bloco mandad
 eu fiz com que os kernels das duas linguagens usassem o mesmo número de blocos e o mesmo número de threads por bloco.
 
 O que sobrou para justificar essa diferença de desempenho foi o PTX. Podemos verificar uma grande falha no compilador para PTX do OpenCL
-no código PTX dos kernels de multiplicação de matrizes.O do CUDA calcula a posição que será utilizada somente uma vez, e a cada passada
+no código PTX dos kernels de multiplicação de matrizes. O do CUDA calcula a posição que será utilizada somente uma vez, e a cada passada
 do loop adiciona o valor de $k$, já o OpenCL calcula a toda passada essa posição e adicionar o $k$. Isso faz com que o desempenho do
-OpenCL seja inferior ao do CUDA, pois são com matrizes de tamanhho grande que se tem o melhor ganho de desempenho na GPU em comparação
+OpenCL seja inferior ao do CUDA, pois são com matrizes de tamanho grande que se tem o melhor ganho de desempenho na GPU em comparação
 com uma CPU, e o OpenCL faz com que cada thread faça o mesmo cálculo para cada iteração no tamanho de uma linha dessas matrizes.
 
-Mas por que o compilador do OpenCL é tão ineficiente? Ao fazer uma pesquisa sobre os drivers que o OpenCL usa para executar nas GPUs NVIDIA
-( e são nesses drivers que o compilador se encontra ) descobri que a última atualização documentada desses drivers foi feita em Junho de 2010
-para dar suporte a versão 1.1 do OpenCL. Dessa data até hoje os drivers não foram atualizados para fornecer acesso as melhorias que o
-hardware das GPUs sofreram.
+Para confirmar que o acesso a memória é realmente o gargalo nesse kernel, utilizamos o kernel abaixo que usa uma variavel auxiliar
+para diminuir a taxa de acesso a memória:
+
+\begin{lstlisting}
+  __kernel void matrixmulti(__global float* MatrixA, 
+                            __global float* MatrixB, 
+                            __global float* MatrixC, 
+                            __global int* N)
+  {
+      unsigned i = get_global_id(0);
+      unsigned j = get_global_id(1);
+      unsigned k;
+      float aux = 0.0;
+      MatrixC[i*(*N)+j] = 0;
+      for( k = 0; k < (*N); k++ ) 
+      	aux += MatrixA[i*(*N)+k]*MatrixB[j+k*(*N)];
+      MatrixC[i*(*N)+j] = aux;
+  }
+\end{lstlisting}
+
+Os resultados do desempenho desse kernel são:
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[scale=0.6]{resultados_opencl_aux_memory.jpg}
+    \label{fig:Kernel Otimizado OpenCL}
+    \caption{Kernel com acesso a memória otimizado OpenCL}
+  \end{center}
+\end{figure}
+
+O kernel otimizado executou em média $62\%$ mais rápido que o kernel process bound. Além disso, o tempo de execução não apresentou a
+grande variação como no kernel process bound. Isso prova que o acesso a memória do OpenCL não é tão eficiente como no CUDA, e como
+obtemos um aumento de desempenho tão grande, podemos ver que o acesso a memória é um fator muito importante no tempo de execução
+de um kernel.
+
+Mas por que o compilador para PTX do OpenCL é tão ineficiente? Ao fazer uma pesquisa sobre os drivers que o OpenCL usa para executar nas
+GPUs NVIDIA ( e são nesses drivers que o compilador se encontra ) descobri que a última atualização documentada desses drivers foi feita 
+em Junho de 2010 para dar suporte a versão 1.1 do OpenCL. Dessa data até hoje os drivers não foram atualizados para fornecer acesso as
+melhorias que o hardware das GPUs sofreram.
 
 \subsection{Comparação dos .ptx}
 
