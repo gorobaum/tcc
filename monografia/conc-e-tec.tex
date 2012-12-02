@@ -1,6 +1,6 @@
 \section{Conceitos e Técnologias}
 \subsection{High-Performance Computability}
-HPC nasceu da necessidade de poder computacional para resolver uma série de problemas, entre eles:
+HPC nasceu da necessidade de poder computacional para resolver uma série de problemas computacionalmente caros, entre eles:
 \begin{itemize}
   \item Previsão climática
   \item Modelação molecular
@@ -8,7 +8,7 @@ HPC nasceu da necessidade de poder computacional para resolver uma série de pro
   \item Física quântica
 \end{itemize}
 Até o final dos anos 90 todos os supercomputadores tinham como base processadores vetoriais. Só no final da década seguinte, 
-com o aumento do desempenho das GPUs, que alguns supercomputadores começaram a usar GPUs como suas fontes e processamento.
+com o aumento do desempenho das GPUs, alguns supercomputadores começaram a usar GPUs como elemento de processamento.
 \subsection{GPU}
 A primeira GPU foi a GeForce 256, da NVIDIA, lançada em 1999. O hardware seguia um pipeline de 2 fases, uma que aplicava transformações
 em vértices e outro em pixels. Em 2001, a GeForce 3 trouxe o primeiro processador de vértices programável. Em 2005 a primeira
@@ -18,23 +18,23 @@ abriu as portas para programas genericos executarem na GPU.
 
 A placa usada para os testes desse trabalho, a GeForce GTX460, usa a arquitetura Fermi, a segunda mais nova arquitetura da NVIDIA para
 GPUs. Essa arquitetura separa o fluxo de execução baseando-se no tipo de aplicação que será executada nela. Existe um fluxo para
-aplicações gráficas e outro para aplicações genéricas, que é o foco desse trabalho. Vamos estudar o fluxo generico abaixo.
+aplicações gráficas e outro para aplicações genéricas, que é o foco desse trabalho.
 
-A placa contém um escalonador implementado em hardware para threads. Ele é responsável por escalonar as threads que serão
-executadas nos streaming multiprocessors (SM). Os SM são conjuntos de 48 processadores, um pequeno bloco de memória própria,
-um cache de instruções e 8 unidades de funções especiais. A Geforce GTX 460 tem 7 SMs, totalizando 336 processadores.
+A placa contém um escalonador para threads implementado em hardware. Ele é responsável por escalonar as threads que serão
+executadas nos streaming multiprocessors (SM). Um SM é um conjunto de 48 processadores, um pequeno bloco de memória própria,
+um cache de instruções e 8 unidades de funções gráficas. A Geforce GTX 460 tem 7 SMs, totalizando 336 processadores.
 
-O código que será executado em cada processador é chamado de \textbf{kernel}. Então, ao executar um kernel na GPU, o 
-hardware criará threads, cada uma executando esse mesmo kernel mas com dados diferentes. Nas placas NVIDIA as threads 
+O código que será executado em cada processador é chamado de \textbf{kernel}. Ao executar um kernel na GPU, o 
+hardware criará threads, cada uma delas executando o mesmo código, mas com dados diferentes. Nas placas NVIDIA as threads 
 são agrupadas em blocos, e esses blocos são escalonados para cada SM. Depois, todas as threads dentro de um bloco são 
-divididas em pequenos grupos. Esses grupos chamados de \textbf{warp}\cite{paulo}, e cada warp é executado paralelamente dentro do 
+divididas em pequenos grupos chamados de \textbf{warp}\cite{paulo}, e cada warp é executado paralelamente dentro do 
 mesmo SM para qual o bloco foi escalonado. Existe um limite para a quantidade de threads escalonadas para execução
 dentro de um SM, que é definida pelos recursos que cada thread consome. Por exemplo, não há como executar 10 threads
 que consomem 10 registradores cada em um SM com 90 registradores.
 
 Outra parte importante do hardware é a memória, que é limitada em relação à da CPU. GPUs tem, em média, 1GB
-de memória, enquanto CPUs tem 4GB. O acesso a um mesmo bloco de memória é concorrente, mas ao utilizar os caches e leitura/escritas em
-conjunto podemos minimizar a taxa com que leituras/escritas conflitantes são feitas. Mas ainda sim é necessário atenção ao escrever um
+de memória, enquanto CPUs tem 4GB. O acesso a um mesmo bloco de memória é concorrente, mas ao utilizar caches e leitura ou escritas em
+conjunto podemos minimizar a taxa com que leituras ou escritas conflitantes são feitas. Mas ainda sim é necessário atenção ao escrever um
 kernel. Dada a estrutura do hardware da GPU, é melhor deixar threads que façam operações sobre posições de memória próximas no mesmo
 SM, assim elas podem utilizar a memória compartilhada do mesmo, e elas podem requisitar em conjunto um mesmo bloco da memória principal,
 se necessário.
@@ -185,8 +185,8 @@ No OpenCL existe um \textit{host} conectado a um ou mais \textit{devices}. Os \t
 Cada \textit{device} é composto de uma ou mais Compute Unit (CU), e cada CU é composto de um ou mais Processing Element (PE). 
 Por exemplo, uma CPU com 2 cores seria vista pelo OpenCL como um \textit{device} com uma Compute Unit e 2 PRocessing Elements. 
 O processamento dentro de um \textit{device} ocorre num PE. O processamento é iniciado atravez de \textit{comandos} que o \textit{host} 
-manda para o \textit{device}. Os PEs podem executar tanto no modelo de SIMD (Instrução Unica, Multiplos Dados) ou SPMD 
-(Procesuso Unico, Multiplos Dados). No SIMD, todas as threads executão a mesma operação ao mesmo tempo em dados diferentes
+manda para o \textit{device}. Os PEs podem executar tanto no modelo de SIMD (Instrução Única, Múltiplos Dados) ou SPMD 
+(Processo Único, Múltiplos Dados). No SIMD, todas as threads executam a mesma operação ao mesmo tempo em dados diferentes
 e no SPMD cada thread tem um ponteiro de instrução próprio. O responsável por iniciar a execução dos kernels nos PE é o \textit{host}.
 
 O OpenCL tem suporte para varios tipos de \textit{devices} diferentes: GPUs, CPUs, DSP ou Cell/B.E. .
@@ -276,7 +276,7 @@ As threads em execução num kernel tem acesso a 4 locais distintos de memória:
 \end{enumerate}
 
 O \textit{host} tem acesso de escrita e leitura na memória global e constante. O kernel tem acesso de escrita e memória em todas as localidades, a menos da local, 
-onde ele só tem acesso de leitura. O OpenCL aplica uma consistência de meória relaxada, ou seja, não existem garantias que o estado de um bloco de memória 
+onde ele só tem acesso de leitura. O OpenCL aplica uma consistência de memória relaxada, ou seja, não existem garantias que o estado de um bloco de memória 
 acessado por um work-item seja igual para qualquer outro work-item acessando aquele bloco. A única consistência de memória garantida pelo OpenCL é de que dentro 
 de uma barreira de um work-group, tanto a memória global quanto a local será igual para todos os work-itens dentro daquele work-group.
 

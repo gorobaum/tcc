@@ -1,3 +1,5 @@
+\hyphenation{re-gis-tra-do-res}
+\hyphenation{re-gis-tra-do-r}
 \section{Atividades Realizadas}
 \subsection{Comparação das abstrações}
 Como as duas linguagens foram desenvolvidas com base num hardware em comum, as suas abstrações são bem parecidas. 
@@ -126,7 +128,7 @@ o mesmo comando usando em conjunto com o modificador \textit{.global} irá busca
 Os modificadores \textit{.u64} e \textit{.f32} definem o tipo a ser tratado, no caso \textit{.u} é um \textbf{Unsigned Int} e \textit{.f} um
 \textbf{Float}, e o número define o tamanho do endereço. 
 
-Nas GPUs NVIDIA, onde várias threads comparlilham o mesmo ponteiro de instrução, cada thread pode modificar os seus registradores para que eles 
+Nas GPUs NVIDIA, onde várias threads compartilham o mesmo ponteiro de instrução, cada thread pode modificar os seus registradores para que eles 
 funcionem como registradores booleanos usando a diretiva \textit{.reg .pred}. Com isso, esses registradores podem receber valores de operadores
 lógicos definidos dentro do PTX. Eles podem ser usandos em conjunto com o símbolo @, que no PTX define se uma instrução será ou não executada
 baseando-se no valor do operador lógico adjunto a ela.
@@ -252,7 +254,7 @@ a qual posição da memória o ponteiro aponta ao definir os parâmetros, mas o 
   cvta.to.global.u64 	%rl3, %rl2;
 \end{lstlisting}
 
-Com os parâmetros necessários carregados e devidamente ajustados, o próximo passo do kernel é calcular o índice da thread. A GPU tem 3 registradores
+Com os parâmetros necessários carregados e devidamente ajustados, o pró-\newline ximo passo do kernel é calcular o índice da thread. A GPU tem 3 registradores
 específicos que guardam o índice local de uma thread. As próximas instruções mostram como calculcar o índice global de uma thread num kernel de 
 2 dimensões:
 

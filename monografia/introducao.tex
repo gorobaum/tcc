@@ -1,16 +1,16 @@
 \section{Introdução}
 \subsection{Motivação}
-Em Computação de Alto Desempenho (HPC) existe uma parcela de supercomputadores montados com base em placas
+Em Computação de alto desempenho (HPC) existe uma parcela de supercomputadores montados com base em placas
 de processamento gráfico (GPU). O termo GPGPU (General-purpose computing on graphics processing units) é
-usado para denotar o uso de GPUs para executar programas de mais amplo espectro.
+\\usado para denotar o uso de GPUs como a principal unidade de computação em programas de mais amplo espectro.
 
-Duas linguagens são muito utilizadas atualmente para programação em ambientes GPGPU, OpenCL (Open Computing Language) 
-e CUDA (Compute Unified Device Architecture). OpenCL é reconhecido como a melhor linguagem para ambientes GPGPU
-genéricos, enquanto o CUDA é a melhor para ambientes NVIDIA.
+Duas linguagens são muito utilizadas atualmente para programação em ambientes GPGPU, o OpenCL (Open Computing Language) 
+e o CUDA (Compute Unified Device Architecture). O OpenCL é reconhecido por executar em ambientes GPGPU com processadores genéricos, 
+enquanto o CUDA é construido envolta de ambientes NVIDIA.
 
 \subsection{Objetivos}
 O objetivo do estudo é comparar a eficiência de programas escritos nessas duas linguagens rodando em uma placa NVIDIA GeForce GTX 460
-e comparar o modo com que eles abstraem uma GPU, tornando possível rodar programas genéricos na mesma.
+e comparar o modo com que eles abstraem os recursos de uma GPU, tornando possível executar programas genéricos na mesma.
 
 \subsection{Problemas a serem resolvidos}
 Para realizar a comparação de eficiência entre as linguagens é necessário desenvolver dois algoritmos para testes, um que verifique
